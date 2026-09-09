@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markets | Cryptocurrency Price Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <div class="header-left">
+                <div class="logo">Crypto Tracker</div>
+                <h1 class="page-title">Market Overview</h1>
+            </div>
+            <div class="header-right">
+                <div class="live-status">
+                    <span class="live-dot"></span>
+                    <span class="live-text">Live</span>
+                </div>
+                <div class="last-updated">
+                    Updated: <span id="last-update">--</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Summary Section -->
+        <section class="summary-section">
+            <div class="summary-item">
+                <div class="summary-label">Tracked Assets</div>
+                <div class="summary-value" id="total-tracked">--</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Top Gainer (24h)</div>
+                <div class="summary-value positive" id="top-gainer">--</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Top Loser (24h)</div>
+                <div class="summary-value negative" id="top-loser">--</div>
+            </div>
+        </section>
+
+        <!-- Portfolio Section -->
+        <section class="portfolio-section" id="portfolio-section">
+            <h2 class="section-title">My Portfolio</h2>
+            <div class="portfolio-container-box">
+                <div id="portfolio-list" class="portfolio-list"></div>
+                <div id="portfolio-empty" class="portfolio-empty">
+                    My Portfolio is empty. Use the star icons in the market table to add coins to your watchlist.
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Table Section (Full Width) -->
+        <div class="table-section">
+            <div class="table-toolbar">
+                <div class="search-group">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="global-search" placeholder="Search assets...">
+                </div>
+                <div class="toolbar-actions">
+                    <button id="btn-toggle-alerts" class="btn-alerts" title="Manage Alerts">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        Alerts
+                        <span id="alert-badge" class="alert-badge hidden">0</span>
+                    </button>
+                    <button id="reset-filters" class="btn-reset">Reset All</button>
+                </div>
+            </div>
+
+            <!-- Collapsible alerts panel -->
+            <div id="alerts-panel" class="alerts-panel hidden">
+                <div class="alerts-panel-inner">
+                    <!-- Create alert form -->
+                    <div class="alert-form">
+                        <div class="alert-form-title">New Alert</div>
+                        <div class="alert-form-row">
+                            <select id="al-coin" class="al-select al-coin"></select>
+                            <select id="al-metric" class="al-select">
+                                <option value="price">Price</option>
+                                <option value="change">24h Change</option>
+                                <option value="cap">Market Cap</option>
+                            </select>
+                            <select id="al-op" class="al-select al-op-select">
+                                <option value="gt">&gt;</option>
+                                <option value="gte">&gt;=</option>
+                                <option value="lt">&lt;</option>
+                                <option value="lte">&lt;=</option>
+                            </select>
+                            <input id="al-val" class="al-input" type="text" placeholder="e.g. 80000 or 5%">
+                            <button id="al-add" class="btn-al-add">+ Add</button>
+                        </div>
+                        <div id="al-error" class="al-error hidden"></div>
+                    </div>
+                    <!-- Active alerts list -->
+                    <div id="alert-list" class="alert-list">
+                        <div class="alert-list-empty">No active alerts.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast container -->
+            <div id="toast-container" class="toast-container"></div>
+
+            <!-- Main Data Table -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="col-star"></th>
+                            <th class="col-rank">
+                                <div class="th-inner">
+                                    <span>#</span>
+                                    <button class="filter-icon" data-popover="pop-rank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button>
+                                </div>
+                                <div class="popover" id="pop-rank">
+                                    <div class="popover-title">Filter by Rank</div>
+                                    <input type="number" id="f-min-rank" placeholder="Min Rank">
+                                    <input type="number" id="f-max-rank" placeholder="Max Rank">
+                                    <div class="popover-title">Sort</div>
+                                    <button class="sort-btn" data-col="rank" data-dir="asc">Ascending (1-10)</button>
+                                    <button class="sort-btn" data-col="rank" data-dir="desc">Descending (10-1)</button>
+                                </div>
+                            </th>
+                            <th class="col-asset">
+                                <div class="th-inner">
+                                    <span>Asset</span>
+                                    <button class="filter-icon" data-popover="pop-asset"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button>
+                                </div>
+                                <div class="popover" id="pop-asset">
+                                    <div class="popover-title">Search</div>
+                                    <input type="text" id="f-asset-name" placeholder="Name">
+                                    <div class="popover-title">Sort</div>
+                                    <button class="sort-btn" data-col="asset" data-dir="asc">A to Z</button>
+                                    <button class="sort-btn" data-col="asset" data-dir="desc">Z to A</button>
+                                </div>
+                            </th>
+                            <th class="col-price">
+                                <div class="th-inner justify-right">
+                                    <span>Price</span>
+                                    <button class="filter-icon" data-popover="pop-price"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button>
+                                </div>
+                                <div class="popover right-align" id="pop-price">
+                                    <div class="popover-title">Filter by Price</div>
+                                    <select id="f-price-op" class="op-select">
+                                        <option value="gte">Greater than or equal</option>
+                                        <option value="gt">Greater than</option>
+                                        <option value="lte">Less than or equal</option>
+                                        <option value="lt">Less than</option>
+                                        <option value="eq">Equal to</option>
+                                    </select>
+                                    <input type="number" id="f-price-val" class="op-value" placeholder="e.g. 50000" step="any">
+                                    <button class="btn-apply" data-col="price">Apply</button>
+                                    <div class="popover-title">Sort</div>
+                                    <button class="sort-btn" data-col="price" data-dir="desc">High to Low</button>
+                                    <button class="sort-btn" data-col="price" data-dir="asc">Low to High</button>
+                                </div>
+                            </th>
+                            <th class="col-change">
+                                <div class="th-inner justify-right">
+                                    <span>24h Change</span>
+                                    <button class="filter-icon" data-popover="pop-change"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button>
+                                </div>
+                                <div class="popover right-align" id="pop-change">
+                                    <div class="popover-title">Filter by 24h Change</div>
+                                    <select id="f-change-op" class="op-select">
+                                        <option value="gte">Greater than or equal</option>
+                                        <option value="gt">Greater than</option>
+                                        <option value="lte">Less than or equal</option>
+                                        <option value="lt">Less than</option>
+                                        <option value="eq">Equal to</option>
+                                    </select>
+                                    <input type="number" id="f-change-val" class="op-value" placeholder="e.g. 5 or -2" step="any">
+                                    <button class="btn-apply" data-col="change">Apply</button>
+                                    <button id="btn-gainers" class="btn-filter-toggle">Gainers Only</button>
+                                    <button id="btn-losers" class="btn-filter-toggle">Losers Only</button>
+                                    <div class="popover-title">Sort</div>
+                                    <button class="sort-btn" data-col="change" data-dir="desc">Highest to Lowest</button>
+                                    <button class="sort-btn" data-col="change" data-dir="asc">Lowest to Highest</button>
+                                </div>
+                            </th>
+                            <th class="col-cap">
+                                <div class="th-inner justify-right">
+                                    <span>Market Cap</span>
+                                    <button class="filter-icon" data-popover="pop-cap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button>
+                                </div>
+                                <div class="popover right-align" id="pop-cap">
+                                    <div class="popover-title">Filter by Market Cap</div>
+                                    <select id="f-cap-op" class="op-select">
+                                        <option value="gte">Greater than or equal</option>
+                                        <option value="gt">Greater than</option>
+                                        <option value="lte">Less than or equal</option>
+                                        <option value="lt">Less than</option>
+                                        <option value="eq">Equal to</option>
+                                    </select>
+                                    <input type="text" id="f-cap-val" class="op-value" placeholder="e.g. $10B, $1T, $500M">
+                                    <button class="btn-apply" data-col="cap">Apply</button>
+                                    <div class="popover-title">Sort</div>
+                                    <button class="sort-btn" data-col="cap" data-dir="desc">High to Low</button>
+                                    <button class="sort-btn" data-col="cap" data-dir="asc">Low to High</button>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="crypto-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Visualizations Below Table -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Price History</h3>
+                    <div class="chart-controls">
+                        <!-- View mode toggle -->
+                        <div class="chart-btn-group" id="chart-mode-group">
+                            <button class="chart-btn active" data-mode="price">Price</button>
+                            <button class="chart-btn" data-mode="pct">% Change</button>
+                        </div>
+                        <!-- Time range selector -->
+                        <div class="chart-btn-group" id="chart-range-group">
+                            <button class="chart-btn active" data-range="all">All</button>
+                            <button class="chart-btn" data-range="7d">7d</button>
+                            <button class="chart-btn" data-range="24h">24h</button>
+                        </div>
+                        <select id="coin-selector" class="coin-selector">
+                            <option value="bitcoin">Bitcoin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="price-history-canvas"></canvas>
+                    <div id="chart-empty-msg" class="chart-empty" style="display:none">No data available for this selection.</div>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <h3 class="chart-title">24h Performance</h3>
+                <div class="chart-img-wrapper">
+                    <img id="change-chart" src="/static/images/change_chart.png" alt="24h Change" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

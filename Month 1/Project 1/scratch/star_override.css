@@ -1,0 +1,31 @@
+
+/* Star Button Appearance Override */
+table .star-btn {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 4px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    transition: transform 0.1s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+table .star-btn:hover {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    transform: scale(1.2) !important;
+}
+
+table .star-btn:focus {
+    outline: none !important;
+}
