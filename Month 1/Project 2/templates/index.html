@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMDb Analytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        #history-date-select option {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="imdb-text">IMDb</span> <span class="scraper-text">Scraper</span>
+            </div>
+            <nav>
+                <ul id="sidebar-nav">
+                    <li class="active nav-item" data-target="dashboard-page"><i class="fas fa-home"></i> Dashboard</li>
+                    <li class="nav-item" data-target="history-page"><i class="fas fa-history"></i> History</li>
+                    <li class="nav-item" data-target="notifications-page"><i class="fas fa-bell"></i> Notifications</li>
+                                    </ul>
+            </nav>
+            <button class="scrape-btn" id="run-scraper-btn"><i class="fas fa-sync-alt"></i> Fetch Latest Data</button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="dashboard-page" class="spa-page active-page">
+            <header>
+                <h1>Top 250 Overview</h1>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Search movies...">
+                </div>
+            </header>
+
+            <!-- Summary Stats -->
+            <section class="summary-stats">
+                <div class="stat-card">
+                    <div class="stat-title">Total Tracked</div>
+                    <div class="stat-value" id="stat-total">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Average Rating</div>
+                    <div class="stat-value" id="stat-avg">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">New Entries</div>
+                    <div class="stat-value text-success" id="stat-new">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Ranking Changes</div>
+                    <div class="stat-value text-warning" id="stat-changes">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Last Updated</div>
+                    <div class="stat-value stat-small" id="stat-updated">--</div>
+                </div>
+            </section>
+
+            <!-- Tools & Filters -->
+            <section class="controls-section">
+                <div class="filters">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">Top 10</button>
+                    <button class="filter-btn">New Entries</button>
+                </div>
+                <div class="sort-options">
+                    <label>Sort by:</label>
+                    <select id="sort-select">
+                        <option value="rank-asc">Rank (Asc)</option>
+                        <option value="rank-desc">Rank (Desc)</option>
+                        <option value="rating-desc">Rating (High-Low)</option>
+                        <option value="year-desc">Year (New-Old)</option>
+                    </select>
+                </div>
+            </section>
+
+            
+            <!-- Live Console (Hidden by default) -->
+            <section class="live-console-section" id="live-console-section" style="display: none;">
+                <div class="console-header">
+                    <div class="console-title"><i class="fas fa-terminal"></i> LIVE DATA FETCH</div>
+                    <div class="console-progress-text" id="console-progress-text">0 / 250</div>
+                </div>
+                <div class="console-progress-bar">
+                    <div class="console-progress-fill" id="console-progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="console-output" id="console-output">
+                    <!-- Logs injected here -->
+                </div>
+            </section>
+
+            <!-- Movie Grid -->
+            <section class="movies-grid" id="movies-container">
+                <!-- Movies injected by JS -->
+            </section>
+            </div>
+            
+            <div id="history-page" class="spa-page" style="display: none;">
+                <header>
+                    <h1>History</h1>
+                    <div style="display: flex; gap: 1rem; align-items: center; justify-content: flex-end; flex-wrap: wrap; flex: 1;">
+                        <div class="search-bar" id="history-search-container" style="display: none;">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="history-search-input" placeholder="Search historical movies...">
+                        </div>
+                        <div class="search-bar" style="max-width: 300px; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border); flex-shrink: 0;">
+                            <select id="history-date-select" style="background: transparent; border: none; color: var(--text-main); cursor: pointer; width: 100%; outline: none;">
+                                <option value="">Loading dates...</option>
+                            </select>
+                        </div>
+                    </div>
+                </header>
+                <section class="movies-grid" id="history-movies-container">
+                    <!-- History movies injected here -->
+                </section>
+            </div>
+            
+            <div id="notifications-page" class="spa-page" style="display: none;">
+                <header>
+                    <h1>Notifications</h1>
+                </header>
+                <section id="notifications-container" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+                    <!-- Notifications injected here -->
+                </section>
+            </div>
+            
+            </main>
+        
+        <!-- Notification Panel (Visible for demo) -->
+        <aside class="notification-panel" id="notification-panel" style="display: none;">
+            <h2>Recent Changes</h2>
+            <div class="notification-list">
+            </div>
+        </aside>
+    </div>
+
+    <!-- Movie Details Modal Overlay -->
+    <div class="movie-modal" id="movie-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-modal">&times;</span>
+            <div class="modal-body" id="modal-body">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
