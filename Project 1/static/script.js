@@ -312,6 +312,9 @@ class PriceHistoryChart {
         this.emptyMsg = container.querySelector(".chart-empty");
         this.modeGroup = container.querySelector(".chart-mode-group") || container.querySelector("#chart-mode-group");
         this.rangeGroup = container.querySelector(".chart-range-group") || container.querySelector("#chart-range-group");
+        this.customControls = container.querySelector(".chart-custom-controls");
+        this.customStart = container.querySelector(".chart-custom-start");
+        this.customEnd = container.querySelector(".chart-custom-end");
         
         this.chartMode = "price";
         this.chartRange = "all";
@@ -338,7 +341,23 @@ class PriceHistoryChart {
                 if (!btn) return;
                 this.chartRange = btn.getAttribute("data-range");
                 this.setActiveBtn(this.rangeGroup, "data-range", this.chartRange);
+                if (this.customControls) {
+                    this.customControls.style.display = this.chartRange === "custom" ? "flex" : "none";
+                }
                 this.drawChart();
+            });
+        }
+        
+        if (this.customStart) {
+            this.customStart.addEventListener("change", () => {
+                if (this.customEnd && this.customStart.value) this.customEnd.min = this.customStart.value;
+                if (this.chartRange === "custom") this.drawChart();
+            });
+        }
+        if (this.customEnd) {
+            this.customEnd.addEventListener("change", () => {
+                if (this.customStart && this.customEnd.value) this.customStart.max = this.customEnd.value;
+                if (this.chartRange === "custom") this.drawChart();
             });
         }
 
@@ -387,6 +406,24 @@ class PriceHistoryChart {
     applyRangeFilter(data) {
         if (!data.length) return data;
         if (this.chartRange === "all") return data;
+        
+        if (this.chartRange === "custom") {
+            const startVal = this.customStart ? this.customStart.value : "";
+            const endVal = this.customEnd ? this.customEnd.value : "";
+            if (!startVal && !endVal) return data; // if neither is set, just show all data
+            
+            let filtered = data;
+            if (startVal) {
+                const sDate = new Date(startVal);
+                if (!isNaN(sDate)) filtered = filtered.filter(p => p.ts >= sDate);
+            }
+            if (endVal) {
+                const eDate = new Date(endVal);
+                if (!isNaN(eDate)) filtered = filtered.filter(p => p.ts <= eDate);
+            }
+            return filtered; // If empty, return [] so drawChart shows emptyMsg
+        }
+
         const now = new Date();
         const cutoff = new Date(now);
         if (this.chartRange === "24h") cutoff.setHours(cutoff.getHours() - 24);
@@ -447,7 +484,10 @@ class PriceHistoryChart {
         const series   = this.buildSeries(filtered);
 
         if (!series.length) {
-            if (this.emptyMsg) this.emptyMsg.style.display = "";
+            if (this.emptyMsg) {
+                this.emptyMsg.textContent = this.chartRange === "custom" ? "No data available for this range" : "No data available";
+                this.emptyMsg.style.display = "";
+            }
             return;
         }
         if (this.emptyMsg) this.emptyMsg.style.display = "none";
@@ -814,6 +854,12 @@ function expandPortfolioRow(slug) {
                 <button class="chart-btn active" data-range="all">All</button>
                 <button class="chart-btn" data-range="7d">7d</button>
                 <button class="chart-btn" data-range="24h">24h</button>
+                <button class="chart-btn" data-range="custom">Custom</button>
+            </div>
+            <div class="chart-custom-controls" style="display:none; align-items:center; gap:8px;">
+                <input type="datetime-local" class="chart-custom-start" style="padding:4px 6px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px; outline:none; color:#334155; background:#fff;">
+                <span style="font-size:12px; color:#64748b;">to</span>
+                <input type="datetime-local" class="chart-custom-end" style="padding:4px 6px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px; outline:none; color:#334155; background:#fff;">
             </div>
         </div>
         <div class="canvas-wrapper">

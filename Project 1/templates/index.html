@@ -230,6 +230,12 @@
                             <button class="chart-btn active" data-range="all">All</button>
                             <button class="chart-btn" data-range="7d">7d</button>
                             <button class="chart-btn" data-range="24h">24h</button>
+                            <button class="chart-btn" data-range="custom">Custom</button>
+                        </div>
+                        <div class="chart-custom-controls" style="display:none; align-items:center; gap:8px;">
+                            <input type="datetime-local" class="chart-custom-start" style="padding:4px 6px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px; outline:none; color:#334155; background:#fff;">
+                            <span style="font-size:12px; color:#64748b;">to</span>
+                            <input type="datetime-local" class="chart-custom-end" style="padding:4px 6px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px; outline:none; color:#334155; background:#fff;">
                         </div>
                         <select id="coin-selector" class="coin-selector">
                             <option value="bitcoin">Bitcoin</option>

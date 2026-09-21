@@ -54,6 +54,7 @@ def get_latest_data():
     latest_time = df.loc[df["_dt"].idxmax(), "timestamp"]
     
     latest_df = df[df["timestamp"] == latest_time].drop(columns=["_dt"])
+    latest_df = latest_df.drop_duplicates(subset=["name"])
     latest_df = latest_df.sort_values(by="rank")
     
     return latest_df.to_dict("records")
