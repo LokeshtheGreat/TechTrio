@@ -1,4 +1,4 @@
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -10,7 +10,7 @@ import re
 class FlipkartReviewScraper:
 
     def __init__(self):
-        options = Options()
+        options = uc.ChromeOptions()
 
         options.add_argument("--headless=new")
         options.add_argument("--disable-gpu")
@@ -18,7 +18,7 @@ class FlipkartReviewScraper:
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1920,1080")
 
-        self.driver = webdriver.Chrome(options=options)
+        self.driver = uc.Chrome(options=options)
 
     def open_review_page(self, product_url):
         """
@@ -102,69 +102,14 @@ class FlipkartReviewScraper:
         time.sleep(5)
 
     def find_review_blocks(self):
+        # We will use BeautifulSoup to parse the page source
+        # instead of fragile Selenium DOM traversal.
+        pass # implemented in collect_reviews
+
+    def extract_review(self, texts):
         """
-        Find the actual review containers.
-
-        Flipkart's current review page places
-        'Certified Buyer' several levels inside
-        the complete review container.
-
-        Level 4 currently contains:
-            Review title
-            Reviewer
-            Location
-            Certified Buyer
-            Date
+        Extract one Flipkart review from a list of texts.
         """
-
-        buyers = self.driver.find_elements(
-            By.XPATH,
-            "//*[normalize-space()='Certified Buyer']"
-        )
-
-        blocks = []
-        seen = set()
-
-        for buyer in buyers:
-
-            try:
-
-                # Current Flipkart structure:
-                #
-                # Certified Buyer
-                #       ↑
-                # Level 1
-                # Level 2
-                # Level 3
-                # Level 4 = complete review block
-                block = buyer.find_element(
-                    By.XPATH,
-                    "./../../../../"
-                )
-
-                text = block.text.strip()
-
-                if not text:
-                    continue
-
-                # Avoid duplicate containers
-                if text in seen:
-                    continue
-
-                seen.add(text)
-
-                blocks.append(block)
-
-            except Exception:
-                continue
-
-        return blocks
-
-    def extract_review(self, block):
-        """
-        Extract one Flipkart review.
-        """
-
         review = {
             "review_id": None,
             "rating": None,
@@ -173,268 +118,180 @@ class FlipkartReviewScraper:
             "reviewer": None,
             "location": None,
             "date": None,
-            "verified_purchase": False
+            "verified_purchase": False,
+            "helpful_count": 0
         }
 
-        lines = [
-            line.strip()
-            for line in block.text.splitlines()
-            if line.strip()
-        ]
-
-        if not lines:
+        if not texts:
             return review
 
-        # --------------------------------------------------
-        # Rating
-        # --------------------------------------------------
+        try:
+            # Rating is usually the first element, e.g. "5.0" or "4"
+            if texts[0].replace(".", "").isdigit():
+                review["rating"] = float(texts[0])
+            
+            # Title is usually index 2 (after bullet)
+            if len(texts) > 2 and texts[1] in ["\u2022", "•"]:
+                review["title"] = texts[2]
+            
+            # Date is usually the last element, e.g. "\u00b7 3 months ago"
+            date_text = texts[-1]
+            review["date"] = date_text.replace("\u00b7", "").strip()
 
-        for line in lines:
+            # Check for Verified Purchase
+            if len(texts) >= 2:
+                if texts[-2] in ["Verified Purchase", "Certified Buyer"]:
+                    review["verified_purchase"] = True
 
-            if re.fullmatch(
-                r"[1-5](?:\.0)?",
-                line
-            ):
-                try:
-                    review["rating"] = float(line)
+            # Find Reviewer Name
+            # It usually precedes location (", Bengaluru") or "Helpful for"
+            helpful_idx = -1
+            for i, t in enumerate(texts):
+                if t == "Helpful for":
+                    helpful_idx = i
                     break
-                except Exception:
-                    pass
+                    
+            if helpful_idx != -1:
+                # Upvotes is helpful_idx + 1
+                if helpful_idx + 1 < len(texts):
+                    h_text = texts[helpful_idx + 1]
+                    if h_text.endswith('K'):
+                        review["helpful_count"] = int(float(h_text[:-1]) * 1000)
+                    elif h_text.isdigit():
+                        review["helpful_count"] = int(h_text)
 
-        # --------------------------------------------------
-        # Certified Buyer
-        # --------------------------------------------------
-
-        certified_index = None
-
-        for index, line in enumerate(lines):
-
-            if line == "Certified Buyer":
-
-                certified_index = index
-                review["verified_purchase"] = True
-                break
-
-        # --------------------------------------------------
-        # Reviewer + location
-        # --------------------------------------------------
-
-        if certified_index is not None:
-
-            reviewer_index = certified_index - 1
-
-            if reviewer_index >= 0:
-
-                reviewer_line = lines[
-                    reviewer_index
-                ]
-
-                if "," in reviewer_line:
-
-                    parts = reviewer_line.split(
-                        ",",
-                        1
-                    )
-
-                    review["reviewer"] = (
-                        parts[0].strip()
-                    )
-
-                    review["location"] = (
-                        parts[1].strip()
-                    )
-
-                else:
-
-                    review["reviewer"] = (
-                        reviewer_line
-                    )
-
-        # --------------------------------------------------
-        # Date
-        # --------------------------------------------------
-
-        for line in lines:
-
-            if re.search(
-                r"\b\d+\s+"
-                r"(day|days|month|months|year|years)"
-                r"\s+ago\b",
-                line,
-                re.IGNORECASE
-            ):
-
-                review["date"] = line
-                break
-
-        # --------------------------------------------------
-        # Remove metadata
-        # --------------------------------------------------
-
-        metadata_lines = {
-            "Overall",
-            "Camera",
-            "Battery",
-            "Display",
-            "Design",
-            "Performance",
-            "Build Quality",
-            "Value for Money",
-            "Certified Buyer",
-            "Verified Buyer",
-            "Verified Purchase",
-            "Most Helpful",
-            "Latest",
-            "Positive",
-            "Negative"
-        }
-
-        content_lines = []
-
-        for index, line in enumerate(lines):
-
-            # Skip rating
-            if re.fullmatch(
-                r"[1-5](?:\.0)?",
-                line
-            ):
-                continue
-
-            # Skip metadata
-            if line in metadata_lines:
-                continue
-
-            # Skip date
-            if re.search(
-                r"\b\d+\s+"
-                r"(day|days|month|months|year|years)"
-                r"\s+ago\b",
-                line,
-                re.IGNORECASE
-            ):
-                continue
-
-            # Skip reviewer
-            if (
-                review["reviewer"]
-                and line == review["reviewer"]
-            ):
-                continue
-
-            # Skip location
-            if (
-                review["location"]
-                and line == review["location"]
-            ):
-                continue
-
-            content_lines.append(line)
-
-        # --------------------------------------------------
-        # Title + review text
-        # --------------------------------------------------
-
-        if content_lines:
-
-            # In the current Flipkart structure,
-            # the first line is usually the review title.
-            review["title"] = content_lines[0]
-
-            if len(content_lines) > 1:
-
-                review["text"] = " ".join(
-                    content_lines[1:]
-                ).strip()
-
+                # Name is before "Helpful for", might be before location
+                name_idx = helpful_idx - 1
+                if texts[name_idx].startswith(", "):
+                    review["location"] = texts[name_idx][2:].strip()
+                    name_idx -= 1
+                review["reviewer"] = texts[name_idx]
+                
+                # Text is from index 4 up to name_idx (ignoring "more")
+                text_parts = texts[4:name_idx]
+                text_parts = [p for p in text_parts if p != "more" and not p.startswith("Review for:")]
+                review["text"] = " ".join(text_parts).strip()
             else:
+                # Fallback if "Helpful for" is missing
+                # Just take index 4 as text
+                if len(texts) > 4:
+                    review["text"] = texts[4]
 
-                review["text"] = (
-                    content_lines[0]
-                )
+        except Exception as e:
+            print("Error parsing review texts:", e)
 
         return review
 
     def collect_reviews(
         self,
         product_url,
-        max_reviews=20
+        max_reviews=200
     ):
         """
         Collect Flipkart review previews.
         """
 
+        stopping_reason = "UNKNOWN"
         try:
-
-            print(
-                "Opening Flipkart review page..."
-            )
-
-            self.open_review_page(
-                product_url
-            )
-
-            print(
-                "Review page opened:"
-            )
-
-            print(
-                self.driver.current_url
-            )
-
-            # Wait for review elements
-            WebDriverWait(
-                self.driver,
-                20
-            ).until(
-                EC.presence_of_element_located(
-                    (
-                        By.XPATH,
-                        "//*[normalize-space()='Certified Buyer']"
-                    )
-                )
-            )
-
-            time.sleep(2)
-
-            buyers = self.driver.find_elements(
-                By.XPATH,
-                "//*[normalize-space()='Certified Buyer']"
-            )
-
-            print(
-                "Certified Buyer elements:",
-                len(buyers)
-            )
-
-            # Find complete review blocks
-            blocks = self.find_review_blocks()
-
-            print(
-                "Review blocks found:",
-                len(blocks)
-            )
+            print(f"Opening Flipkart review page (Target max reviews: {max_reviews})...")
+            
+            # Use direct URL mapping for product reviews
+            if "/p/" in product_url:
+                base_review_url = product_url.replace("/p/", "/product-reviews/")
+            else:
+                base_review_url = product_url
+                
+            self.driver.get(base_review_url)
+            print("Review page opened:", self.driver.current_url)
 
             reviews = []
+            seen_hashes = set()
+            
+            current_page = 0
+            max_pages = 50 # safety limit
 
-            for block in blocks:
+            while True:
+                current_page += 1
+                if current_page > max_pages:
+                    stopping_reason = "MAX_ITERATIONS_REACHED"
+                    break
+                    
+                # Navigate to specific page
+                if current_page > 1:
+                    page_url = f"{base_review_url}?page={current_page}" if "?" not in base_review_url else f"{base_review_url}&page={current_page}"
+                    self.driver.get(page_url)
+                    print("Navigated to page:", current_page)
+                    
+                import time
+                time.sleep(4)
+                
+                # Use BeautifulSoup to parse the React Native Web DOM
+                html = self.driver.page_source
+                from bs4 import BeautifulSoup
+                import re
+                soup = BeautifulSoup(html, 'html.parser')
+                
+                # Find elements containing 'ago'
+                ago_nodes = soup.find_all(string=re.compile(r'\bago\b', re.IGNORECASE))
+                blocks = []
+                seen_blocks = set()
 
-                review = self.extract_review(
-                    block
-                )
+                for node in ago_nodes:
+                    parent = node.parent
+                    # Traverse up to find the review container
+                    for _ in range(8):
+                        if parent and parent.parent:
+                            parent = parent.parent
+                    
+                    if parent and id(parent) not in seen_blocks:
+                        blocks.append(parent)
+                        seen_blocks.add(id(parent))
 
-                if not review["text"]:
-                    continue
+                print(f"Review blocks found on page {current_page}:", len(blocks))
+                
+                if len(blocks) == 0:
+                    print("No reviews found on page, stopping pagination.")
+                    stopping_reason = "SOURCE_EXHAUSTED"
+                    break
 
-                reviews.append(review)
+                new_reviews_on_page = 0
+                for block in blocks:
+                    texts = [text.strip() for text in block.stripped_strings if text.strip()]
+                    if len(texts) > 50: 
+                        continue # Probably the root container
+                        
+                    review = self.extract_review(texts)
 
+                    if not review.get("text"):
+                        continue
+                        
+                    # Basic identity check to prevent cross-page duplicates
+                    import hashlib
+                    review_hash = hashlib.md5(f"{review.get('reviewer', '')}_{review.get('text', '')[:50]}".encode('utf-8')).hexdigest()
+                    
+                    if review_hash not in seen_hashes:
+                        seen_hashes.add(review_hash)
+                        reviews.append(review)
+                        new_reviews_on_page += 1
+
+                    if len(reviews) >= max_reviews:
+                        break
+
+                if new_reviews_on_page == 0:
+                    print("No new reviews on page, likely reached the end.")
+                    stopping_reason = "NO_NEW_REVIEWS"
+                    break
+                    
                 if len(reviews) >= max_reviews:
+                    stopping_reason = "TARGET_REACHED"
                     break
 
             return {
                 "platform": "Flipkart",
                 "product_url": product_url,
                 "reviews_count": len(reviews),
-                "reviews": reviews
+                "reviews": reviews,
+                "stopping_reason": stopping_reason
             }
 
         except Exception as error:
@@ -444,6 +301,7 @@ class FlipkartReviewScraper:
                 "product_url": product_url,
                 "reviews_count": 0,
                 "reviews": [],
+                "stopping_reason": "ERROR",
                 "error": str(error)
             }
 
@@ -451,33 +309,18 @@ class FlipkartReviewScraper:
         """
         Close Selenium browser.
         """
-
-        self.driver.quit()
-
+        try:
+            self.driver.quit()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
-
     scraper = FlipkartReviewScraper()
-
     try:
-
-        product_url = (
-            "https://www.flipkart.com/"
-            "samsung-galaxy-s24-5g-snapdragon-cobalt-violet-256-gb/"
-            "p/itm0e4552c03ca7c"
-        )
-
-        result = scraper.collect_reviews(
-            product_url,
-            max_reviews=20
-        )
-
-        print(
-            "\nFlipkart Review Result:"
-        )
-
-        print(result)
-
+        product_url = "https://www.flipkart.com/apple-iphone-17-black-256-gb/p/itm6eb39da622cdd"
+        result = scraper.collect_reviews(product_url, max_reviews=20)
+        print("\nFlipkart Review Result:")
+        import json
+        print(json.dumps(result, indent=2))
     finally:
-
         scraper.close()
