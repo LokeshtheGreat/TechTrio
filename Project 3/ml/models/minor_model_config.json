@@ -1,0 +1,43 @@
+{
+    "model_name": "Major Model - Keras",
+    "model_type": "Neural Network",
+    "input_features": [
+        "age",
+        "gender",
+        "height",
+        "weight",
+        "ap_hi",
+        "ap_lo",
+        "cholesterol",
+        "gluc",
+        "smoke",
+        "alco",
+        "active"
+    ],
+    "input_shape": 19,
+    "architecture": [
+        64,
+        32,
+        1
+    ],
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "loss": "binary_crossentropy",
+    "classification_threshold": 0.4,
+    "validation_auc": 0.7982081,
+    "test_metrics": {
+        "accuracy": 0.7206,
+        "precision": 0.6864,
+        "recall": 0.8012,
+        "f1_score": 0.7394,
+        "roc_auc": 0.8029,
+        "average_precision": 0.7828
+    },
+    "dataset": "Cardiovascular Disease Dataset",
+    "original_records": 70000,
+    "retained_records": 68640,
+    "excluded_records": 1360,
+    "target": "cardio",
+    "threshold_note": "0.40 carried forward from the previous OOF experiment; not independently reselected on the rebuilt split.",
+    "limitation": "Classifies recorded cardiovascular disease status. Not a prediction of future disease risk or a medical diagnosis."
+}
