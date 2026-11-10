@@ -17,16 +17,10 @@ from services.model_service import model_service
 
 app = Flask(__name__)
 
-# Configure CORS specifically for local frontend development origins
+# Configure CORS for frontend access (supporting all local development origins)
 CORS(
     app,
-    resources={r"/*": {"origins": [
-        "http://localhost:5501",
-        "http://127.0.0.1:5501",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000"
-    ]}},
+    resources={r"/*": {"origins": "*"}},
     methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"]
 )

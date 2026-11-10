@@ -92,8 +92,8 @@
             <span class="stat-label">Independent Models</span>
           </div>
           <div class="stat-item">
-            <span class="stat-number">11 / 5</span>
-            <span class="stat-label">Features Evaluated</span>
+            <span class="stat-number">11 / 11</span>
+            <span class="stat-label">Features Evaluated (Major / Minor)</span>
           </div>
           <div class="stat-item">
             <span class="stat-number">100%</span>
@@ -168,15 +168,15 @@
           <span class="badge badge-primary">Comprehensive</span>
         </button>
 
-        <button class="mode-tab" id="tabSimple" data-mode="simple">
+        <button class="mode-tab" id="tabSimple" data-mode="minor">
           <div class="tab-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
           <div class="tab-text">
-            <span class="tab-name">Simple Accessible Assessment</span>
-            <span class="tab-desc">Streamlined 5-feature model using accessible health measurements</span>
+            <span class="tab-name">Minor Assessment</span>
+            <span class="tab-desc">11-feature neural network for self-screening using accessible biometrics &amp; lifestyle factors</span>
           </div>
-          <span class="badge badge-secondary">Accessible</span>
+          <span class="badge badge-secondary">Screening</span>
         </button>
       </div>
     </div>
@@ -198,7 +198,9 @@
         
         <form id="assessmentForm" novalidate>
           
-          <!-- GENERAL / DEMOGRAPHIC SECTION (Shared) -->
+          <!-- MAJOR ASSESSMENT MODE CONTAINER (11 Clinical Features) -->
+          <div id="majorFieldsContainer">
+            <!-- GENERAL / DEMOGRAPHIC SECTION (Major Mode) -->
           <div class="form-section">
             <div class="section-badge">Section 1: General & Patient Demographics</div>
             <div class="form-grid">
@@ -431,6 +433,194 @@
 
             </div>
           </div>
+          </div> <!-- /#majorFieldsContainer -->
+
+          <!-- MINOR ASSESSMENT MODE CONTAINER (11 Accessible Features) -->
+          <div id="minorFieldsContainer" class="hidden">
+            <!-- Section 1: Biometrics & Demographics -->
+            <div class="form-section">
+              <div class="section-badge">Section 1: Physical Measurements &amp; Demographics (Minor Model)</div>
+              <div class="form-grid">
+                
+                <!-- age -->
+                <div class="form-group" id="group-age">
+                  <label for="inputMinorAge">
+                    Age (Years) <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Patient age in completed years (18 to 100 years)">i</button>
+                  </label>
+                  <div class="input-with-affix">
+                    <input type="number" id="inputMinorAge" name="age" min="18" max="100" placeholder="e.g. 52">
+                    <span class="affix">yrs</span>
+                  </div>
+                  <span class="field-error" id="error-age"></span>
+                  <span class="field-hint">Range: 18 - 100 (in years)</span>
+                </div>
+
+                <!-- gender -->
+                <div class="form-group" id="group-gender">
+                  <label for="inputMinorGender">
+                    Biological Sex <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Biological sex encoded in training dataset (1: Female / Women, 2: Male / Men)">i</button>
+                  </label>
+                  <select id="inputMinorGender" name="gender">
+                    <option value="" disabled selected>Select sex...</option>
+                    <option value="1">Female (1)</option>
+                    <option value="2">Male (2)</option>
+                  </select>
+                  <span class="field-error" id="error-gender"></span>
+                  <span class="field-hint">1 = Female, 2 = Male</span>
+                </div>
+
+                <!-- height -->
+                <div class="form-group" id="group-height">
+                  <label for="inputMinorHeight">
+                    Height <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Standing height in centimetres (100 to 250 cm)">i</button>
+                  </label>
+                  <div class="input-with-affix">
+                    <input type="number" id="inputMinorHeight" name="height" min="100" max="250" placeholder="e.g. 168">
+                    <span class="affix">cm</span>
+                  </div>
+                  <span class="field-error" id="error-height"></span>
+                  <span class="field-hint">Range: 100 - 250 cm</span>
+                </div>
+
+                <!-- weight -->
+                <div class="form-group" id="group-weight">
+                  <label for="inputMinorWeight">
+                    Body Weight <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Total body weight in kilograms (30 to 300 kg)">i</button>
+                  </label>
+                  <div class="input-with-affix">
+                    <input type="number" step="0.1" id="inputMinorWeight" name="weight" min="30" max="300" placeholder="e.g. 75.0">
+                    <span class="affix">kg</span>
+                  </div>
+                  <span class="field-error" id="error-weight"></span>
+                  <span class="field-hint">Range: 30 - 300 kg</span>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Section 2: Blood Pressure & Metabolic Markers -->
+            <div class="form-section">
+              <div class="section-badge section-badge-clinical">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                Section 2: Hemodynamics &amp; Metabolic Indicators
+              </div>
+              <div class="form-grid">
+
+                <!-- ap_hi -->
+                <div class="form-group" id="group-ap_hi">
+                  <label for="inputMinorApHi">
+                    Systolic Blood Pressure (ap_hi) <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Systolic arterial pressure in mm Hg (upper reading)">i</button>
+                  </label>
+                  <div class="input-with-affix">
+                    <input type="number" id="inputMinorApHi" name="ap_hi" min="50" max="260" placeholder="e.g. 130">
+                    <span class="affix">mm Hg</span>
+                  </div>
+                  <span class="field-error" id="error-ap_hi"></span>
+                  <span class="field-hint">Systolic (upper reading: 50 - 260)</span>
+                </div>
+
+                <!-- ap_lo -->
+                <div class="form-group" id="group-ap_lo">
+                  <label for="inputMinorApLo">
+                    Diastolic Blood Pressure (ap_lo) <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Diastolic arterial pressure in mm Hg (lower reading; must be less than systolic)">i</button>
+                  </label>
+                  <div class="input-with-affix">
+                    <input type="number" id="inputMinorApLo" name="ap_lo" min="30" max="180" placeholder="e.g. 85">
+                    <span class="affix">mm Hg</span>
+                  </div>
+                  <span class="field-error" id="error-ap_lo"></span>
+                  <span class="field-hint">Diastolic (lower reading: 30 - 180)</span>
+                </div>
+
+                <!-- cholesterol -->
+                <div class="form-group" id="group-cholesterol">
+                  <label for="inputMinorCholesterol">
+                    Cholesterol Category <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Categorical cholesterol tier: 1: Normal, 2: Above Normal, 3: Well Above Normal">i</button>
+                  </label>
+                  <select id="inputMinorCholesterol" name="cholesterol">
+                    <option value="" disabled selected>Select cholesterol tier...</option>
+                    <option value="1">1: Normal (&lt; 200 mg/dL)</option>
+                    <option value="2">2: Above Normal (200 - 239 mg/dL)</option>
+                    <option value="3">3: Well Above Normal (&ge; 240 mg/dL)</option>
+                  </select>
+                  <span class="field-error" id="error-cholesterol"></span>
+                </div>
+
+                <!-- gluc -->
+                <div class="form-group" id="group-gluc">
+                  <label for="inputMinorGluc">
+                    Glucose Category <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Categorical glucose tier: 1: Normal, 2: Above Normal, 3: Well Above Normal">i</button>
+                  </label>
+                  <select id="inputMinorGluc" name="gluc">
+                    <option value="" disabled selected>Select glucose tier...</option>
+                    <option value="1">1: Normal (&lt; 100 mg/dL)</option>
+                    <option value="2">2: Above Normal (100 - 125 mg/dL)</option>
+                    <option value="3">3: Well Above Normal (&ge; 126 mg/dL)</option>
+                  </select>
+                  <span class="field-error" id="error-gluc"></span>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Section 3: Lifestyle & Behavioral Parameters -->
+            <div class="form-section">
+              <div class="section-badge">Section 3: Lifestyle &amp; Behavioral Factors</div>
+              <div class="form-grid">
+
+                <!-- smoke -->
+                <div class="form-group" id="group-smoke">
+                  <label for="inputMinorSmoke">
+                    Smoking Status <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Whether the individual currently smokes tobacco products">i</button>
+                  </label>
+                  <select id="inputMinorSmoke" name="smoke">
+                    <option value="" disabled selected>Select smoking status...</option>
+                    <option value="0">0: Non-smoker</option>
+                    <option value="1">1: Smoker</option>
+                  </select>
+                  <span class="field-error" id="error-smoke"></span>
+                </div>
+
+                <!-- alco -->
+                <div class="form-group" id="group-alco">
+                  <label for="inputMinorAlco">
+                    Alcohol Consumption <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Regular alcohol intake status">i</button>
+                  </label>
+                  <select id="inputMinorAlco" name="alco">
+                    <option value="" disabled selected>Select alcohol intake...</option>
+                    <option value="0">0: No or Minimal Alcohol</option>
+                    <option value="1">1: Regular Alcohol Intake</option>
+                  </select>
+                  <span class="field-error" id="error-alco"></span>
+                </div>
+
+                <!-- active -->
+                <div class="form-group" id="group-active">
+                  <label for="inputMinorActive">
+                    Physical Activity <span class="required">*</span>
+                    <button type="button" class="info-tooltip-btn" data-tip="Regular engagement in moderate-to-vigorous physical activity">i</button>
+                  </label>
+                  <select id="inputMinorActive" name="active">
+                    <option value="" disabled selected>Select physical activity...</option>
+                    <option value="0">0: Sedentary / Inactive</option>
+                    <option value="1">1: Regularly Active</option>
+                  </select>
+                  <span class="field-error" id="error-active"></span>
+                </div>
+
+              </div>
+            </div>
+          </div>
 
           <!-- Action Buttons Bar -->
           <div class="form-actions">
@@ -495,7 +685,7 @@
 
             <!-- Model Output Score (FR-14 & 10.2) -->
             <div class="outcome-card score-card">
-              <div class="card-subtitle">Model Output Probability Score</div>
+              <div class="card-subtitle">Model Output Score</div>
               <div class="gauge-wrapper">
                 <div class="score-circle-container">
                   <svg class="score-gauge-svg" viewBox="0 0 120 120">
@@ -503,14 +693,14 @@
                     <circle class="gauge-progress" id="gaugeProgress" cx="60" cy="60" r="50"/>
                   </svg>
                   <div class="score-center-text">
-                    <span class="score-percentage" id="scorePercentage">78%</span>
-                    <span class="score-caption">ML Probability</span>
+                    <span class="score-percentage" id="scorePercentage">--%</span>
+                    <span class="score-caption" id="scoreCaption">Model Score</span>
                   </div>
                 </div>
                 <div class="score-explanation-text">
-                  <div class="score-tier" id="scoreTierBadge">Elevated Risk Tier</div>
+                  <div class="score-tier" id="scoreTierBadge">Awaiting Assessment</div>
                   <p class="score-note">
-                    <strong>Score Definition:</strong> Represents the mathematical output probability generated by the trained classification algorithm on this feature vector. <em>(Not a clinically calibrated future risk index).</em>
+                    <strong>Score Definition:</strong> Continuous prediction score generated by the trained machine learning model on this feature vector. <em>(Not a clinical diagnosis).</em>
                   </p>
                 </div>
               </div>
@@ -718,11 +908,11 @@
         <div class="form-group">
           <label for="apiUrlInput">Prediction API Base URL</label>
           <input type="text" id="apiUrlInput" value="http://localhost:8000" placeholder="e.g. http://localhost:8000">
-          <span class="field-hint">Endpoints expected: <code>/predict/major</code> and <code>/predict/simple</code></span>
+          <span class="field-hint">Endpoints expected: <code>/predict/major</code> and <code>/predict/minor</code></span>
         </div>
         <div class="form-group">
           <label class="toggle-container">
-            <input type="checkbox" id="mockModeToggle" checked>
+            <input type="checkbox" id="mockModeToggle">
             <span class="toggle-switch"></span>
             <span class="toggle-label">Use Built-in Intelligent Fallback Simulation when server is offline</span>
           </label>
