@@ -17,11 +17,42 @@
   'use strict';
 
   // ==========================================
-  // Application State
+  // Application State & Backend Configuration
   // ==========================================
+  const PRODUCTION_API_URL = 'https://cardiopredict-5ovl.onrender.com';
+  const LOCAL_API_URL = 'http://localhost:8000';
+
+  function resolveApiBaseUrl() {
+    // 1. Explicit URL query parameter override (e.g. ?api=local, ?api=production, or ?api=http://...)
+    if (typeof window !== 'undefined' && window.location && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const queryApi = params.get('api') || params.get('backend');
+      if (queryApi) {
+        if (queryApi === 'local') return LOCAL_API_URL;
+        if (queryApi === 'production' || queryApi === 'render') return PRODUCTION_API_URL;
+        if (queryApi.startsWith('http://') || queryApi.startsWith('https://')) {
+          return queryApi.replace(/\/+$/, '');
+        }
+      }
+    }
+
+    // 2. Explicit localStorage override
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem('cardiopredict_api_url');
+      if (stored) {
+        if (stored === 'local') return LOCAL_API_URL;
+        if (stored === 'production') return PRODUCTION_API_URL;
+        return stored.replace(/\/+$/, '');
+      }
+    }
+
+    // 3. Default to deployed production Render backend
+    return PRODUCTION_API_URL;
+  }
+
   const state = {
     currentMode: 'minor', // 'major' | 'minor'
-    apiBaseUrl: (typeof localStorage !== 'undefined' && localStorage.getItem('cardiopredict_api_url')) || 'http://localhost:8000',
+    apiBaseUrl: resolveApiBaseUrl(),
     isSubmitting: false,
     lastResult: null,
     lastPayload: null,
@@ -240,6 +271,27 @@
   const toastMessage = document.getElementById('toastMessage');
 
   // ==========================================
+  // Backend Connectivity & Health Check
+  // ==========================================
+  async function checkBackendHealth() {
+    try {
+      const response = await fetch(`${state.apiBaseUrl}/health`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (response.ok) {
+        const data = await response.json().catch(() => null);
+        console.log(`[CardioPredict] Backend connected (${state.apiBaseUrl}):`, data);
+        return { healthy: true, data };
+      }
+      return { healthy: false, status: response.status };
+    } catch (err) {
+      console.warn(`[CardioPredict] Backend initial ping (${state.apiBaseUrl}):`, err.message);
+      return { healthy: false, error: err.message };
+    }
+  }
+
+  // ==========================================
   // Initialization
   // ==========================================
   function init() {
@@ -254,6 +306,9 @@
     setupFieldTooltips();
     setupModals();
     setupEventListeners();
+
+    // Warm up / verify backend connection asynchronously
+    checkBackendHealth();
   }
 
   // ==========================================
@@ -1433,30 +1488,69 @@
     clearValidationErrors();
     setLoadingState(true);
 
+    let coldStartNoticeTimer = null;
+    // Free-tier cloud instances (Render) sleep after inactivity. Provide feedback if waking up.
+    coldStartNoticeTimer = setTimeout(() => {
+      if (state.isSubmitting) {
+        showToast('Connecting to prediction service... If the cloud backend was idling, it may take up to a minute to wake up.', 'info');
+      }
+    }, 3500);
+
     try {
       const endpoint = `${state.apiBaseUrl}/predict/${state.currentMode}`;
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      let response;
+      try {
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (fetchErr) {
+        const isLocal = state.apiBaseUrl.includes('localhost') || state.apiBaseUrl.includes('127.0.0.1');
+        const msg = isLocal
+          ? `Unable to connect to local backend at ${state.apiBaseUrl}. Ensure your local server is running on port 8000.`
+          : `Unable to reach the prediction service at ${state.apiBaseUrl}. The server may be waking up or temporarily unreachable. Please check your connection and try again.`;
+        throw new Error(msg);
+      }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (_) {
+          errorData = {};
+        }
+
         if (response.status === 400 && errorData.details) {
           displayValidationErrors(errorData.details);
-          throw new Error('Backend input validation failed.');
+          throw new Error('Backend input validation failed. Please check the highlighted fields.');
         }
+
+        if (response.status === 502 || response.status === 503 || response.status === 504) {
+          throw new Error(errorData.error || 'The prediction backend is currently spinning up or temporarily unavailable. Please retry in a few moments.');
+        }
+
+        if (response.status === 500) {
+          throw new Error(errorData.error || 'The prediction service encountered an unexpected internal error.');
+        }
+
         throw new Error(errorData.error || `Server responded with HTTP ${response.status}`);
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonErr) {
+        throw new Error('The prediction service returned an invalid non-JSON response.');
+      }
+
       displayResults(result, payload);
       showToast('Cardiovascular risk estimation completed successfully.', 'success');
     } catch (err) {
       console.error('Prediction request failed:', err);
       showToast(`Error: ${err.message}`, 'error');
     } finally {
+      if (coldStartNoticeTimer) clearTimeout(coldStartNoticeTimer);
       setLoadingState(false);
     }
   }
@@ -2495,20 +2589,36 @@
     if (!toastNotification || !toastMessage) return;
 
     toastMessage.textContent = msg;
-    toastNotification.className = `toast-notification toast-${type}`;
+    toastNotification.className = `toast toast-${type}`;
     toastNotification.classList.remove('hidden');
 
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
       toastNotification.classList.add('hidden');
-    }, 4000);
+    }, 4500);
   }
 
-  // Expose for testing & deterministic verification
+  // Expose for testing & runtime configuration
   if (typeof window !== 'undefined') {
     window.resolvePrediction = resolvePrediction;
     window.displayResults = displayResults;
     window.updatePrintReport = updatePrintReport;
+    window.CardioPredictAPI = {
+      PRODUCTION_API_URL,
+      LOCAL_API_URL,
+      getBaseUrl: () => state.apiBaseUrl,
+      setBaseUrl: (url) => {
+        state.apiBaseUrl = (url || PRODUCTION_API_URL).replace(/\/+$/, '');
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('cardiopredict_api_url', state.apiBaseUrl);
+        }
+        console.log(`[CardioPredict] API Base URL set to: ${state.apiBaseUrl}`);
+        return state.apiBaseUrl;
+      },
+      useProduction: () => window.CardioPredictAPI.setBaseUrl(PRODUCTION_API_URL),
+      useLocal: () => window.CardioPredictAPI.setBaseUrl(LOCAL_API_URL),
+      checkHealth: checkBackendHealth
+    };
   }
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = { resolvePrediction, displayResults, updatePrintReport };
