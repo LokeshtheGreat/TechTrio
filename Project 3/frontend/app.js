@@ -20,10 +20,12 @@
   // Application State
   // ==========================================
   const state = {
-    currentMode: 'major', // 'major' | 'minor'
-    apiBaseUrl: localStorage.getItem('cardiopredict_api_url') || 'http://localhost:8000',
+    currentMode: 'minor', // 'major' | 'minor'
+    apiBaseUrl: (typeof localStorage !== 'undefined' && localStorage.getItem('cardiopredict_api_url')) || 'http://localhost:8000',
     isSubmitting: false,
     lastResult: null,
+    lastPayload: null,
+    lastResultMode: null,
     bpm: 75,
     rhythm: 'normal',
     audioActive: false,
@@ -43,13 +45,6 @@
   const modeBanner = document.getElementById('modeBanner');
   const bannerTitle = document.getElementById('bannerTitle');
   const bannerText = document.getElementById('bannerText');
-
-  const apiConfigBtn = document.getElementById('apiConfigBtn');
-  const apiModal = document.getElementById('apiModal');
-  const closeApiBtn = document.getElementById('closeApiBtn');
-  const apiUrlInput = document.getElementById('apiUrlInput');
-  const saveApiBtn = document.getElementById('saveApiBtn');
-  const testConnectionBtn = document.getElementById('testConnectionBtn');
 
   const glossaryBtn = document.getElementById('glossaryBtn');
   const glossaryModal = document.getElementById('glossaryModal');
@@ -174,26 +169,71 @@
   const performAnotherAssessmentBtn = document.getElementById('performAnotherAssessmentBtn');
   const printReportBtn = document.getElementById('printReportBtn');
 
-  const scorePercentage = document.getElementById('scorePercentage');
-  const scoreCaption = document.getElementById('scoreCaption');
-  const scoreTierBadge = document.getElementById('scoreTierBadge');
-  const gaugeProgress = document.getElementById('gaugeProgress');
-
+  const outcomeGrid = document.getElementById('outcomeGrid');
   const statusCard = document.getElementById('statusCard');
   const statusIcon = document.getElementById('statusIcon');
   const statusHeadline = document.getElementById('statusHeadline');
   const statusSubtext = document.getElementById('statusSubtext');
 
-  const generalExplanationText = document.getElementById('generalExplanationText');
-  const featureImportanceList = document.getElementById('featureImportanceList');
+  // Radar Elements & Health Measurements
+  const radarHeadingText = document.getElementById('radarHeadingText');
+  const radarSectionInstruction = document.getElementById('radarSectionInstruction');
+  const radarCardLayoutMajor = document.getElementById('radarCardLayoutMajor');
+  const radarCardLayoutMinor = document.getElementById('radarCardLayoutMinor');
 
-  // Radar Elements
-  const radarPolygon = document.getElementById('radarPolygon');
-  const radarValBP = document.getElementById('radarValBP');
-  const radarValHR = document.getElementById('radarValHR');
-  const radarValChol = document.getElementById('radarValChol');
-  const radarValAngina = document.getElementById('radarValAngina');
-  const radarValST = document.getElementById('radarValST');
+  // Major Radar Elements
+  const majorRadarSvg = document.getElementById('majorRadarSvg');
+  const majorRadarPolygon = document.getElementById('majorRadarPolygon');
+  const majorDotAge = document.getElementById('majorDotAge');
+  const majorDotRestingBP = document.getElementById('majorDotRestingBP');
+  const majorDotChol = document.getElementById('majorDotChol');
+  const majorDotMaxHR = document.getElementById('majorDotMaxHR');
+  const majorDotOldpeak = document.getElementById('majorDotOldpeak');
+  const majorAxisLineChol = document.getElementById('majorAxisLineChol');
+  const majorAxisLabelChol = document.getElementById('majorAxisLabelChol');
+  const majorRadarValAge = document.getElementById('majorRadarValAge');
+  const majorRadarValRestingBP = document.getElementById('majorRadarValRestingBP');
+  const majorRadarValChol = document.getElementById('majorRadarValChol');
+  const majorRadarRefChol = document.getElementById('majorRadarRefChol');
+  const majorRadarValMaxHR = document.getElementById('majorRadarValMaxHR');
+  const majorRadarValOldpeak = document.getElementById('majorRadarValOldpeak');
+
+  // Major Clinical Section & Explanatory Box
+  const majorClinicalSection = document.getElementById('majorClinicalSection');
+  const majorValSex = document.getElementById('majorValSex');
+  const majorValChestPainType = document.getElementById('majorValChestPainType');
+  const majorValFastingBS = document.getElementById('majorValFastingBS');
+  const majorValRestingECG = document.getElementById('majorValRestingECG');
+  const majorValExerciseAngina = document.getElementById('majorValExerciseAngina');
+  const majorValSTSlope = document.getElementById('majorValSTSlope');
+  const majorChartExplanationBox = document.getElementById('majorChartExplanationBox');
+
+  // Legacy radar aliases (if needed)
+  const radarPolygon = majorRadarPolygon;
+  const radarValBP = majorRadarValRestingBP;
+  const radarValHR = majorRadarValMaxHR;
+  const radarValChol = majorRadarValChol;
+  const radarValAngina = null;
+  const radarValST = majorRadarValOldpeak;
+
+  const minorRadarPolygon = document.getElementById('minorRadarPolygon');
+  const minorDotAge = document.getElementById('minorDotAge');
+  const minorDotBMI = document.getElementById('minorDotBMI');
+  const minorDotSys = document.getElementById('minorDotSys');
+  const minorDotDia = document.getElementById('minorDotDia');
+  const minorRadarValAge = document.getElementById('minorRadarValAge');
+  const minorRadarValBMI = document.getElementById('minorRadarValBMI');
+  const minorRadarValSysBP = document.getElementById('minorRadarValSysBP');
+  const minorRadarValDiaBP = document.getElementById('minorRadarValDiaBP');
+
+  // Minor Lifestyle & Explanation Box
+  const minorLifestyleSection = document.getElementById('minorLifestyleSection');
+  const minorValCholesterol = document.getElementById('minorValCholesterol');
+  const minorValGlucose = document.getElementById('minorValGlucose');
+  const minorValSmoke = document.getElementById('minorValSmoke');
+  const minorValAlco = document.getElementById('minorValAlco');
+  const minorValActive = document.getElementById('minorValActive');
+  const minorChartExplanationBox = document.getElementById('minorChartExplanationBox');
 
   // Notification Toast
   const toastNotification = document.getElementById('toastNotification');
@@ -211,6 +251,7 @@
     setupCardiacHudTicker();
     setupBmiCalculator();
     setupFormControls();
+    setupFieldTooltips();
     setupModals();
     setupEventListeners();
   }
@@ -280,10 +321,16 @@
     if (tabSimple) {
       tabSimple.addEventListener('click', () => setAssessmentMode('minor'));
     }
-    setAssessmentMode('major');
+    setAssessmentMode('minor');
   }
 
   function setAssessmentMode(mode) {
+    if (state.currentMode !== mode) {
+      if (resultsContainer) resultsContainer.classList.add('hidden');
+      state.lastResult = null;
+      state.lastPayload = null;
+      state.lastResultMode = null;
+    }
     state.currentMode = mode;
     clearValidationErrors();
 
@@ -294,8 +341,8 @@
       if (minorFieldsContainer) minorFieldsContainer.classList.add('hidden');
       if (majorOnlySection) majorOnlySection.classList.remove('hidden');
 
-      if (bannerTitle) bannerTitle.textContent = 'Major Model Assessment Mode (Random Forest)';
-      if (bannerText) bannerText.textContent = '11-feature clinical diagnostic screening evaluated against Cleveland/Statlog heart pathology parameters.';
+      if (bannerTitle) bannerTitle.textContent = '';
+      if (bannerText) bannerText.textContent = '';
     } else {
       if (tabSimple) tabSimple.classList.add('active');
       if (tabMajor) tabMajor.classList.remove('active');
@@ -303,8 +350,8 @@
       if (minorFieldsContainer) minorFieldsContainer.classList.remove('hidden');
       if (majorOnlySection) majorOnlySection.classList.add('hidden');
 
-      if (bannerTitle) bannerTitle.textContent = 'Minor Model Assessment Mode (Keras Neural Network)';
-      if (bannerText) bannerText.textContent = '11-feature cardiovascular screening evaluated against Kaggle 70,000-patient cardiovascular indicators.';
+      if (bannerTitle) bannerTitle.textContent = '';
+      if (bannerText) bannerText.textContent = '';
     }
   }
 
@@ -856,33 +903,95 @@
 
     // Chest Pain Cards
     if (chestPainCardGrid) {
-      const cards = chestPainCardGrid.querySelectorAll('.chest-pain-card');
-      cards.forEach((card) => {
+      const cards = Array.from(chestPainCardGrid.querySelectorAll('.chest-card, .chest-pain-card'));
+      cards.forEach((card, index) => {
         card.addEventListener('click', () => {
-          cards.forEach((c) => c.classList.remove('active'));
-          card.classList.add('active');
-          const type = card.getAttribute('data-type');
-          if (inputChestPainType) {
-            inputChestPainType.value = type;
-            clearFieldError('ChestPainType');
+          selectChestPainCard(card);
+        });
+
+        card.addEventListener('keydown', (e) => {
+          let targetIndex = -1;
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            selectChestPainCard(card);
+            return;
+          } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            targetIndex = (index + 1) % cards.length;
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            targetIndex = (index - 1 + cards.length) % cards.length;
+          }
+
+          if (targetIndex !== -1) {
+            const targetCard = cards[targetIndex];
+            selectChestPainCard(targetCard);
+            targetCard.focus();
           }
         });
       });
     }
 
+    if (inputChestPainType && chestPainCardGrid) {
+      inputChestPainType.addEventListener('change', () => {
+        const val = inputChestPainType.value;
+        const matchingCard = chestPainCardGrid.querySelector(`[data-val="${val}"], [data-type="${val}"]`);
+        if (matchingCard) {
+          const cards = chestPainCardGrid.querySelectorAll('.chest-card, .chest-pain-card');
+          cards.forEach((c) => {
+            const isSelected = c === matchingCard;
+            c.classList.toggle('active', isSelected);
+            c.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+            c.setAttribute('tabindex', isSelected ? '0' : '-1');
+          });
+        }
+      });
+    }
+
     // Angina Pill Group
     if (anginaPillGroup) {
-      const pills = anginaPillGroup.querySelectorAll('.angina-pill');
-      pills.forEach((pill) => {
+      const pills = Array.from(anginaPillGroup.querySelectorAll('.segment-btn, .angina-pill'));
+      pills.forEach((pill, index) => {
         pill.addEventListener('click', () => {
-          pills.forEach((p) => p.classList.remove('active'));
-          pill.classList.add('active');
-          const val = pill.getAttribute('data-value');
-          if (inputExerciseAngina) {
-            inputExerciseAngina.value = val;
-            clearFieldError('ExerciseAngina');
+          selectAnginaPill(pill);
+        });
+
+        pill.addEventListener('keydown', (e) => {
+          let targetIndex = -1;
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            selectAnginaPill(pill);
+            return;
+          } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            targetIndex = (index + 1) % pills.length;
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            targetIndex = (index - 1 + pills.length) % pills.length;
+          }
+
+          if (targetIndex !== -1) {
+            const targetPill = pills[targetIndex];
+            selectAnginaPill(targetPill);
+            targetPill.focus();
           }
         });
+      });
+    }
+
+    if (inputExerciseAngina && anginaPillGroup) {
+      inputExerciseAngina.addEventListener('change', () => {
+        const val = inputExerciseAngina.value;
+        const matchingPill = anginaPillGroup.querySelector(`[data-val="${val}"], [data-value="${val}"]`);
+        if (matchingPill) {
+          const pills = anginaPillGroup.querySelectorAll('.segment-btn, .angina-pill');
+          pills.forEach((p) => {
+            const isSelected = p === matchingPill;
+            p.classList.toggle('active', isSelected);
+            p.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+            p.setAttribute('tabindex', isSelected ? '0' : '-1');
+          });
+        }
       });
     }
 
@@ -894,6 +1003,50 @@
     // Reset button
     if (resetBtn) {
       resetBtn.addEventListener('click', resetForm);
+    }
+  }
+
+  // ----------------------------------------
+  // Chest Pain Type Selection
+  // ----------------------------------------
+  function selectChestPainCard(card) {
+    if (!chestPainCardGrid || !card) return;
+    const cards = Array.from(chestPainCardGrid.querySelectorAll('.chest-card, .chest-pain-card'));
+    const val = card.getAttribute('data-val') || card.getAttribute('data-type');
+    if (!val) return;
+
+    cards.forEach((c) => {
+      const isSelected = c === card;
+      c.classList.toggle('active', isSelected);
+      c.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+      c.setAttribute('tabindex', isSelected ? '0' : '-1');
+    });
+
+    if (inputChestPainType) {
+      inputChestPainType.value = val;
+      clearFieldError('ChestPainType');
+    }
+  }
+
+  // ----------------------------------------
+  // Exercise-Induced Angina Selection
+  // ----------------------------------------
+  function selectAnginaPill(pill) {
+    if (!anginaPillGroup || !pill) return;
+    const pills = Array.from(anginaPillGroup.querySelectorAll('.segment-btn, .angina-pill'));
+    const val = pill.getAttribute('data-val') || pill.getAttribute('data-value');
+    if (!val) return;
+
+    pills.forEach((p) => {
+      const isSelected = p === pill;
+      p.classList.toggle('active', isSelected);
+      p.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+      p.setAttribute('tabindex', isSelected ? '0' : '-1');
+    });
+
+    if (inputExerciseAngina) {
+      inputExerciseAngina.value = val;
+      clearFieldError('ExerciseAngina');
     }
   }
 
@@ -947,19 +1100,23 @@
 
       // Chest pain card ASY
       if (chestPainCardGrid) {
-        chestPainCardGrid.querySelectorAll('.chest-pain-card').forEach((c) => {
-          c.classList.toggle('active', c.getAttribute('data-type') === 'ASY');
-        });
+        const asyCard = chestPainCardGrid.querySelector('[data-val="ASY"], [data-type="ASY"]');
+        if (asyCard) {
+          selectChestPainCard(asyCard);
+        } else if (inputChestPainType) {
+          inputChestPainType.value = 'ASY';
+        }
       }
-      if (inputChestPainType) inputChestPainType.value = 'ASY';
 
       // Exercise Angina Y
       if (anginaPillGroup) {
-        anginaPillGroup.querySelectorAll('.angina-pill').forEach((p) => {
-          p.classList.toggle('active', p.getAttribute('data-value') === 'Y');
-        });
+        const yPill = anginaPillGroup.querySelector('[data-val="Y"], [data-value="Y"]');
+        if (yPill) {
+          selectAnginaPill(yPill);
+        } else if (inputExerciseAngina) {
+          inputExerciseAngina.value = 'Y';
+        }
       }
-      if (inputExerciseAngina) inputExerciseAngina.value = 'Y';
 
       showToast('Loaded clinical high-risk profile for Major Model.', 'info');
     } else {
@@ -992,12 +1149,16 @@
     updateMaxHRBadge(140);
 
     if (chestPainCardGrid) {
-      chestPainCardGrid.querySelectorAll('.chest-pain-card').forEach((c) => c.classList.remove('active'));
+      const defaultCard = chestPainCardGrid.querySelector('[data-val="ASY"], [data-type="ASY"]');
+      if (defaultCard) {
+        selectChestPainCard(defaultCard);
+      }
     }
     if (anginaPillGroup) {
-      anginaPillGroup.querySelectorAll('.angina-pill').forEach((p) => {
-        p.classList.toggle('active', p.getAttribute('data-value') === 'N');
-      });
+      const defaultPill = anginaPillGroup.querySelector('[data-val="N"], [data-value="N"]');
+      if (defaultPill) {
+        selectAnginaPill(defaultPill);
+      }
     }
 
     if (resultsContainer) resultsContainer.classList.add('hidden');
@@ -1199,7 +1360,20 @@
 
     if (printReportBtn) {
       printReportBtn.addEventListener('click', () => {
-        window.print();
+        if (state.lastResult && state.lastPayload && state.lastResultMode === state.currentMode) {
+          updatePrintReport(state.lastResult, state.lastPayload, state.currentMode);
+          window.print();
+        } else {
+          showToast('Please perform an assessment before printing.', 'warning');
+        }
+      });
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeprint', () => {
+        if (state.lastResult && state.lastPayload && state.lastResultMode === state.currentMode) {
+          updatePrintReport(state.lastResult, state.lastPayload, state.currentMode);
+        }
       });
     }
   }
@@ -1225,7 +1399,7 @@
         Sex: inputSex.value,
         ChestPainType: inputChestPainType.value,
         RestingBP: parseFloat(inputRestingBP.value),
-        Cholesterol: cholVal === '' ? null : parseFloat(cholVal),
+        Cholesterol: (cholVal === '' || parseFloat(cholVal) === 0) ? null : parseFloat(cholVal),
         FastingBS: parseInt(inputFastingBS.value, 10),
         RestingECG: inputRestingECG.value,
         MaxHR: parseFloat(inputMaxHR.value),
@@ -1298,15 +1472,92 @@
   }
 
   // ==========================================
+  // Deterministic Prediction Resolution
+  // ==========================================
+  /**
+   * Resolves the binary classification prediction deterministically from backend response.
+   * Authoritative field: `result.prediction` (0 or 1).
+   * Secondary field: `result.predicted_status` ("Positive" or "Negative").
+   *
+   * Precedence & Contradiction Detection:
+   * 1. If result is null/undefined or not an object -> invalid
+   * 2. Authoritative field `prediction` must be 0 or 1 (or parseable strictly to 0 or 1).
+   * 3. Secondary field `predicted_status` if present must be "Positive" (1) or "Negative" (0).
+   * 4. Contradiction: If both are present, they must strictly match. If they disagree, flag contradiction.
+   * 5. Precedence:
+   *    - If `prediction` is valid (and no contradiction), use `prediction`.
+   *    - If `prediction` is omitted/null/undefined and `predicted_status` is valid, use `predicted_status`.
+   * 6. If invalid, missing, or contradictory: return { valid: false, error: ... }.
+   *
+   * @param {Object} result - Backend API response object
+   * @returns {{ valid: boolean, isPositive?: boolean, classNum?: number, error?: string }}
+   */
+  function resolvePrediction(result) {
+    if (!result || typeof result !== 'object') {
+      return { valid: false, error: 'Response payload is missing or not an object' };
+    }
+
+    // Authoritative field: prediction
+    let numPred = null;
+    if (result.prediction === 0 || result.prediction === 1) {
+      numPred = result.prediction;
+    } else if (typeof result.prediction === 'string' && (result.prediction.trim() === '0' || result.prediction.trim() === '1')) {
+      numPred = parseInt(result.prediction.trim(), 10);
+    } else if (result.prediction !== undefined && result.prediction !== null) {
+      return { valid: false, error: `Invalid prediction value (${JSON.stringify(result.prediction)})` };
+    }
+
+    // Secondary field: predicted_status
+    let statusPred = null;
+    if (typeof result.predicted_status === 'string') {
+      const normalized = result.predicted_status.trim().toLowerCase();
+      if (normalized === 'positive') {
+        statusPred = 1;
+      } else if (normalized === 'negative') {
+        statusPred = 0;
+      } else {
+        return { valid: false, error: `Invalid predicted_status string ("${result.predicted_status}")` };
+      }
+    } else if (result.predicted_status !== undefined && result.predicted_status !== null) {
+      return { valid: false, error: `Invalid predicted_status type (${typeof result.predicted_status})` };
+    }
+
+    // Contradiction detection: both fields are present but disagree
+    if (numPred !== null && statusPred !== null && numPred !== statusPred) {
+      return {
+        valid: false,
+        error: `Contradictory fields: prediction=${numPred} vs predicted_status="${result.predicted_status}"`
+      };
+    }
+
+    // Authoritative resolution
+    if (numPred !== null) {
+      return { valid: true, isPositive: numPred === 1, classNum: numPred };
+    }
+
+    // Secondary resolution fallback
+    if (statusPred !== null) {
+      return { valid: true, isPositive: statusPred === 1, classNum: statusPred };
+    }
+
+    // Missing both prediction and predicted_status
+    return { valid: false, error: 'Missing authoritative prediction and predicted_status fields' };
+  }
+
+  // ==========================================
   // Display Assessment Results
   // ==========================================
   function displayResults(result, payload) {
     state.lastResult = result;
+    state.lastPayload = payload;
+    state.lastResultMode = state.currentMode;
+
+    const resolved = resolvePrediction(result);
 
     if (resultModeBadge) {
       resultModeBadge.textContent = state.currentMode === 'major'
-        ? 'Major Model (Random Forest)'
-        : 'Minor Model (Keras Neural Network)';
+        ? 'Extended Clinical Assessment'
+        : 'Simple Assessment';
     }
 
     if (resultTimestamp) {
@@ -1314,116 +1565,104 @@
       resultTimestamp.textContent = `Evaluated: ${now.toLocaleTimeString()} • ${now.toLocaleDateString()}`;
     }
 
-    const rawScore = typeof result.model_score === 'number' ? result.model_score : 0;
-    const scorePct = (rawScore * 100).toFixed(1);
+    // Predicted Status Card (Rendered for both Major and Minor)
+    if (!resolved.valid) {
+      console.error('Deterministic prediction resolution failed:', resolved.error, result);
 
-    if (scorePercentage) scorePercentage.textContent = `${scorePct}%`;
-    if (scoreCaption) scoreCaption.textContent = 'Model Score';
-
-    // Circular gauge stroke animation
-    if (gaugeProgress) {
-      const circumference = 251.2;
-      const offset = circumference - (circumference * Math.min(1.0, Math.max(0, rawScore)));
-      gaugeProgress.style.strokeDashoffset = offset;
-
-      if (rawScore < 0.35) {
-        gaugeProgress.style.stroke = 'var(--success-color, #10b981)';
-      } else if (rawScore < 0.65) {
-        gaugeProgress.style.stroke = 'var(--warning-color, #f59e0b)';
-      } else {
-        gaugeProgress.style.stroke = 'var(--danger-color, #ef4444)';
+      if (statusCard) {
+        statusCard.className = 'outcome-card status-card status-indeterminate';
       }
-    }
 
-    // Model score classification tier (statistical model range, non-clinical)
-    if (scoreTierBadge) {
-      if (rawScore < 0.35) {
-        scoreTierBadge.textContent = 'Low Model Score (0.00 – 0.34)';
-        scoreTierBadge.className = 'score-tier-badge tier-low';
-      } else if (rawScore < 0.65) {
-        scoreTierBadge.textContent = 'Moderate Model Score (0.35 – 0.64)';
-        scoreTierBadge.className = 'score-tier-badge tier-moderate';
-      } else {
-        scoreTierBadge.textContent = 'Elevated Model Score (0.65 – 1.00)';
-        scoreTierBadge.className = 'score-tier-badge tier-high';
-      }
-    }
-
-    // Predicted Status Card
-    const isPositive = result.predicted_class === 1;
-    if (statusCard) {
-      statusCard.className = `outcome-card status-card ${isPositive ? 'status-positive' : 'status-negative'}`;
-    }
-
-    if (statusIcon) {
-      if (isPositive) {
+      if (statusIcon) {
         statusIcon.innerHTML = `
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-        `;
-      } else {
-        statusIcon.innerHTML = `
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
         `;
       }
-    }
 
-    if (statusHeadline) {
-      statusHeadline.textContent = result.predicted_status || (isPositive ? 'Heart Disease Detected' : 'No Heart Disease Detected');
-    }
-
-    if (statusSubtext) {
-      statusSubtext.textContent = isPositive
-        ? 'The statistical classification model predicted a positive status based on the submitted feature inputs.'
-        : 'The statistical classification model predicted a negative status based on the submitted feature inputs.';
-    }
-
-    // Context & Explanation Box (Zero-fabrication)
-    if (generalExplanationText) {
-      generalExplanationText.innerHTML = `
-        <p><strong>Predicted Status:</strong> <span style="font-weight: 700; color: ${isPositive ? '#ef4444' : '#10b981'};">${result.predicted_status}</span> &bull; <strong>Continuous Model Score:</strong> ${scorePct}% (${rawScore.toFixed(4)})</p>
-        <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
-          <strong>Model Pipeline:</strong> ${result.metadata && result.metadata.model_name ? result.metadata.model_name : (state.currentMode === 'major' ? 'Random Forest Classifier (scikit-learn)' : 'Multilayer Perceptron (Keras/TensorFlow)')}
-        </p>
-        <div style="margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: rgba(239, 68, 68, 0.06); border-left: 3px solid #ef4444; border-radius: 4px; font-size: 0.8rem; color: var(--text-primary); font-style: italic;">
-          <strong>Regulatory Notice:</strong> ${result.disclaimer || 'This tool provides a machine-learning-assisted estimation and does not constitute a definitive medical diagnosis.'}
-        </div>
-      `;
-    }
-
-    // Evaluated Features Summary List (No fabricated SHAP weights)
-    if (featureImportanceList) {
-      featureImportanceList.innerHTML = '';
-      const summaryContainer = document.createElement('div');
-      summaryContainer.className = 'evaluated-features-grid';
-      summaryContainer.style.display = 'grid';
-      summaryContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
-      summaryContainer.style.gap = '0.6rem';
-      summaryContainer.style.marginTop = '0.5rem';
-
-      for (const [key, val] of Object.entries(payload)) {
-        const item = document.createElement('div');
-        item.style.padding = '0.5rem 0.75rem';
-        item.style.background = 'var(--card-bg, #1e293b)';
-        item.style.border = '1px solid var(--border-color, #334155)';
-        item.style.borderRadius = '6px';
-        item.style.fontSize = '0.82rem';
-
-        const displayVal = val === null ? 'Imputed (Median)' : val;
-        item.innerHTML = `<span style="color: var(--text-muted);">${key}:</span> <strong style="color: var(--text-primary); float: right;">${displayVal}</strong>`;
-        summaryContainer.appendChild(item);
+      if (statusHeadline) {
+        statusHeadline.textContent = 'Assessment Status Undetermined';
       }
-      featureImportanceList.appendChild(summaryContainer);
+
+      if (statusSubtext) {
+        statusSubtext.textContent = `Unable to verify model prediction: ${resolved.error}. Please retry.`;
+      }
+    } else {
+      const isPositive = resolved.isPositive;
+
+      if (statusCard) {
+        statusCard.className = `outcome-card status-card ${isPositive ? 'status-positive' : 'status-negative'}`;
+      }
+
+      if (statusIcon) {
+        if (isPositive) {
+          statusIcon.innerHTML = `
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          `;
+        } else {
+          statusIcon.innerHTML = `
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          `;
+        }
+      }
+
+      if (statusHeadline) {
+        statusHeadline.textContent = isPositive ? 'Heart Disease Detected' : 'No Heart Disease Detected';
+      }
+
+      if (statusSubtext) {
+        statusSubtext.textContent = isPositive
+          ? 'The statistical classification model predicted a positive status based on the submitted feature inputs.'
+          : 'The statistical classification model predicted a negative status based on the submitted feature inputs.';
+      }
     }
 
-    // Render 360° Radar Chart
-    renderRadarChart(payload);
+    // Mode-specific UI section visibility & visualizations
+    if (state.currentMode === 'minor') {
+      if (radarHeadingText) radarHeadingText.textContent = 'Your Health Measurements';
+      if (radarSectionInstruction) {
+        radarSectionInstruction.textContent = 'A visual overview of the health measurements provided in your assessment.';
+      }
+
+      if (radarCardLayoutMajor) radarCardLayoutMajor.classList.add('hidden');
+      if (majorClinicalSection) majorClinicalSection.classList.add('hidden');
+      if (majorChartExplanationBox) majorChartExplanationBox.classList.add('hidden');
+
+      if (radarCardLayoutMinor) radarCardLayoutMinor.classList.remove('hidden');
+      if (minorLifestyleSection) minorLifestyleSection.classList.remove('hidden');
+      if (minorChartExplanationBox) minorChartExplanationBox.classList.remove('hidden');
+
+      renderMinorHealthMeasurements(payload);
+    } else {
+      // Major Assessment Mode
+      if (radarHeadingText) radarHeadingText.textContent = 'Your Health Measurements';
+      if (radarSectionInstruction) {
+        radarSectionInstruction.textContent = 'A visual overview of the clinical measurements provided in your assessment.';
+      }
+
+      if (radarCardLayoutMinor) radarCardLayoutMinor.classList.add('hidden');
+      if (minorLifestyleSection) minorLifestyleSection.classList.add('hidden');
+      if (minorChartExplanationBox) minorChartExplanationBox.classList.add('hidden');
+
+      if (radarCardLayoutMajor) radarCardLayoutMajor.classList.remove('hidden');
+      if (majorClinicalSection) majorClinicalSection.classList.remove('hidden');
+      if (majorChartExplanationBox) majorChartExplanationBox.classList.remove('hidden');
+
+      renderMajorHealthMeasurements(payload);
+    }
+
+    // Synchronize formal print report document
+    updatePrintReport(result, payload, state.currentMode);
 
     if (resultsContainer) {
       resultsContainer.classList.remove('hidden');
@@ -1432,123 +1671,802 @@
   }
 
   // ==========================================
-  // 360° Cardiac Biomarker Radar Chart
+  // Formal Assessment Print & PDF Report Generation
   // ==========================================
-  function renderRadarChart(payload) {
-    if (!radarPolygon) return;
+  function updatePrintReport(result, payload, mode) {
+    if (typeof document === 'undefined') return;
 
-    let bpScore = 0.5;
-    let hrScore = 0.5;
-    let cholScore = 0.5;
-    let anginaScore = 0.0;
-    let stScore = 0.5;
+    const printDoc = document.getElementById('printReportDocument');
+    if (!printDoc) return;
 
-    if (state.currentMode === 'major') {
-      const bp = parseFloat(payload.RestingBP) || 120;
-      bpScore = Math.max(0.1, Math.min(1.0, (bp - 90) / 100));
+    const printDate = document.getElementById('printReportDate');
+    const printTime = document.getElementById('printReportTime');
+    const printModeText = document.getElementById('printReportModeText');
+    const printAssessmentPill = document.getElementById('printAssessmentPill');
 
-      const hr = parseFloat(payload.MaxHR) || 140;
-      hrScore = Math.max(0.1, Math.min(1.0, (hr - 70) / 130));
+    const printResultCard = document.getElementById('printResultCard');
+    const printResultIcon = document.getElementById('printResultIcon');
+    const printResultHeadline = document.getElementById('printResultHeadline');
+    const printResultSubtext = document.getElementById('printResultSubtext');
 
-      const chol = parseFloat(payload.Cholesterol) || 200;
-      cholScore = Math.max(0.1, Math.min(1.0, (chol - 120) / 260));
+    const printMeasurementsHeader = document.getElementById('printMeasurementsHeader');
+    const printMeasurementsBody = document.getElementById('printMeasurementsBody');
+    const printIndicatorsHeader = document.getElementById('printIndicatorsHeader');
+    const printIndicatorsBody = document.getElementById('printIndicatorsBody');
 
-      anginaScore = payload.ExerciseAngina === 'Y' ? 0.95 : 0.15;
+    const printVizChartWrap = document.getElementById('printVizChartWrap');
+    const printVizLegendWrap = document.getElementById('printVizLegendWrap');
+    const printVizNote = document.getElementById('printVizNote');
 
-      const oldpeak = parseFloat(payload.Oldpeak) || 0;
-      stScore = Math.max(0.1, Math.min(1.0, (oldpeak + 2.0) / 6.0));
+    // 1. Header Metadata
+    const now = new Date();
+    if (printDate) printDate.textContent = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    if (printTime) printTime.textContent = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-      if (radarValBP) radarValBP.textContent = `${Math.round(bp)} mmHg`;
-      if (radarValHR) radarValHR.textContent = `${Math.round(hr)} bpm`;
-      if (radarValChol) radarValChol.textContent = `${Math.round(chol)} mg/dL`;
-      if (radarValAngina) radarValAngina.textContent = payload.ExerciseAngina === 'Y' ? 'Positive' : 'None';
-      if (radarValST) radarValST.textContent = `${oldpeak.toFixed(1)} mm`;
+    const isMajor = mode === 'major';
+    const modeName = isMajor ? 'Extended Clinical Assessment' : 'Simple Assessment';
+    if (printModeText) printModeText.textContent = modeName;
+    if (printAssessmentPill) printAssessmentPill.textContent = modeName;
+
+    // 2. Resolved Prediction Outcome
+    const resolved = resolvePrediction(result);
+    if (!resolved.valid) {
+      if (printResultCard) printResultCard.className = 'print-result-card status-indeterminate';
+      if (printResultHeadline) printResultHeadline.textContent = 'Assessment Status Undetermined';
+      if (printResultSubtext) {
+        printResultSubtext.textContent = 'The backend model prediction could not be verified deterministically from the response payload.';
+      }
+      if (printResultIcon) {
+        printResultIcon.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        `;
+      }
     } else {
-      const bp = parseFloat(payload.ap_hi) || 120;
-      bpScore = Math.max(0.1, Math.min(1.0, (bp - 90) / 90));
-
-      const chol = parseInt(payload.cholesterol, 10) || 1;
-      cholScore = chol === 1 ? 0.25 : (chol === 2 ? 0.65 : 0.95);
-
-      const gluc = parseInt(payload.gluc, 10) || 1;
-      hrScore = gluc === 1 ? 0.25 : (gluc === 2 ? 0.65 : 0.95);
-
-      anginaScore = payload.smoke === 1 ? 0.85 : 0.15;
-      stScore = payload.active === 1 ? 0.20 : 0.80;
-
-      if (radarValBP) radarValBP.textContent = `${Math.round(bp)} mmHg`;
-      if (radarValHR) radarValHR.textContent = `Gluc: ${gluc}`;
-      if (radarValChol) radarValChol.textContent = `Chol: ${chol}`;
-      if (radarValAngina) radarValAngina.textContent = payload.smoke === 1 ? 'Smoker' : 'Non-Smoker';
-      if (radarValST) radarValST.textContent = payload.active === 1 ? 'Active' : 'Sedentary';
+      const isPos = resolved.isPositive;
+      if (printResultCard) {
+        printResultCard.className = `print-result-card ${isPos ? 'status-positive' : 'status-negative'}`;
+      }
+      if (printResultHeadline) {
+        printResultHeadline.textContent = isPos ? 'Heart Disease Detected' : 'No Heart Disease Detected';
+      }
+      if (printResultSubtext) {
+        printResultSubtext.textContent = isPos
+          ? 'The statistical classification model predicted a positive cardiovascular risk status based on the submitted feature inputs.'
+          : 'The statistical classification model predicted a negative cardiovascular risk status based on the submitted feature inputs.';
+      }
+      if (printResultIcon) {
+        if (isPos) {
+          printResultIcon.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          `;
+        } else {
+          printResultIcon.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          `;
+        }
+      }
     }
 
-    // 5-point radar polygon mapping
-    const center = 150;
-    const maxRadius = 110;
-    const scores = [bpScore, hrScore, cholScore, anginaScore, stScore];
-    const angles = [-90, -18, 54, 126, 198]; // 5 equally spaced angles in degrees
+    // 3. Submitted Assessment Tables
+    if (isMajor) {
+      if (printMeasurementsHeader) printMeasurementsHeader.textContent = 'Clinical Measurements';
+      if (printIndicatorsHeader) printIndicatorsHeader.textContent = 'Clinical & Electrocardiographic Indicators';
 
-    const points = angles.map((deg, i) => {
-      const rad = (deg * Math.PI) / 180;
-      const r = maxRadius * scores[i];
-      const x = center + r * Math.cos(rad);
-      const y = center + r * Math.sin(rad);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    });
+      // Check cholesterol missingness
+      const rawChol = payload ? payload.Cholesterol : null;
+      const hasChol = !(rawChol === null || rawChol === undefined || rawChol === '' || parseFloat(rawChol) === 0 || isNaN(parseFloat(rawChol)));
+      const cholDisplay = hasChol ? `${payload.Cholesterol} mg/dL` : '<span class="print-val-not-provided">Not provided</span>';
 
-    radarPolygon.setAttribute('points', points.join(' '));
+      const ageVal = payload && payload.Age !== undefined ? `${payload.Age} yrs` : 'Not provided';
+      const rbpVal = payload && payload.RestingBP !== undefined ? `${payload.RestingBP} mmHg` : 'Not provided';
+      const maxHrVal = payload && payload.MaxHR !== undefined ? `${payload.MaxHR} bpm` : 'Not provided';
+      const oldpeakVal = payload && payload.Oldpeak !== undefined ? `${payload.Oldpeak} mm` : 'Not provided';
+
+      if (printMeasurementsBody) {
+        printMeasurementsBody.innerHTML = `
+          <tr>
+            <td>Age</td>
+            <td>${ageVal}</td>
+            <td>Dataset P5–P95: 37.0 – 68.0 yrs</td>
+          </tr>
+          <tr>
+            <td>Resting Blood Pressure</td>
+            <td>${rbpVal}</td>
+            <td>Dataset P5–P95: 107.6 – 160.0 mmHg</td>
+          </tr>
+          <tr>
+            <td>Serum Cholesterol</td>
+            <td>${cholDisplay}</td>
+            <td>Dataset P5–P95: 165.2 – 339.8 mg/dL</td>
+          </tr>
+          <tr>
+            <td>Maximum Heart Rate (MaxHR)</td>
+            <td>${maxHrVal}</td>
+            <td>Dataset P5–P95: 96.0 – 178.0 bpm</td>
+          </tr>
+          <tr>
+            <td>ST Depression (Oldpeak)</td>
+            <td>${oldpeakVal}</td>
+            <td>Dataset P5–P95: 0.0 – 3.0 mm</td>
+          </tr>
+        `;
+      }
+
+      // Map Major Categorical Indicators
+      const sexMap = { 'M': 'Male', 'F': 'Female' };
+      const sexVal = payload && sexMap[payload.Sex] ? sexMap[payload.Sex] : (payload && payload.Sex ? payload.Sex : 'Not provided');
+
+      const cptMap = {
+        'ASY': 'Asymptomatic (ASY)',
+        'NAP': 'Non-Anginal Pain (NAP)',
+        'ATA': 'Atypical Angina (ATA)',
+        'TA': 'Typical Angina (TA)'
+      };
+      const cptVal = payload && cptMap[payload.ChestPainType] ? cptMap[payload.ChestPainType] : (payload && payload.ChestPainType ? payload.ChestPainType : 'Not provided');
+
+      const fbsVal = payload && (payload.FastingBS === 1 || payload.FastingBS === '1')
+        ? '> 120 mg/dL (Elevated)'
+        : '≤ 120 mg/dL (Normal)';
+
+      const ecgMap = {
+        'Normal': 'Normal',
+        'ST': 'ST-T Wave Abnormality (ST)',
+        'LVH': 'Left Ventricular Hypertrophy (LVH)'
+      };
+      const ecgVal = payload && ecgMap[payload.RestingECG] ? ecgMap[payload.RestingECG] : (payload && payload.RestingECG ? payload.RestingECG : 'Normal');
+
+      const anginaVal = payload && (payload.ExerciseAngina === 'Y' || payload.ExerciseAngina === '1')
+        ? 'Yes (Angina Induced)'
+        : 'No (No Angina)';
+
+      const slopeMap = {
+        'Up': 'Upsloping (Up)',
+        'Flat': 'Flat',
+        'Down': 'Downsloping (Down)'
+      };
+      const slopeVal = payload && slopeMap[payload.ST_Slope] ? slopeMap[payload.ST_Slope] : (payload && payload.ST_Slope ? payload.ST_Slope : 'Flat');
+
+      if (printIndicatorsBody) {
+        printIndicatorsBody.innerHTML = `
+          <tr>
+            <td>Biological Sex</td>
+            <td>${sexVal}</td>
+          </tr>
+          <tr>
+            <td>Chest Pain Type</td>
+            <td>${cptVal}</td>
+          </tr>
+          <tr>
+            <td>Fasting Blood Sugar</td>
+            <td>${fbsVal}</td>
+          </tr>
+          <tr>
+            <td>Resting ECG</td>
+            <td>${ecgVal}</td>
+          </tr>
+          <tr>
+            <td>Exercise-Induced Angina</td>
+            <td>${anginaVal}</td>
+          </tr>
+          <tr>
+            <td>ST Slope</td>
+            <td>${slopeVal}</td>
+          </tr>
+        `;
+      }
+
+      // Major Visualization & Legend
+      if (printVizChartWrap && majorRadarSvg) {
+        printVizChartWrap.innerHTML = majorRadarSvg.outerHTML;
+      }
+
+      if (printVizLegendWrap) {
+        printVizLegendWrap.innerHTML = `
+          <div class="print-legend-grid">
+            <div class="print-legend-item">
+              <span class="print-legend-title">Age</span>
+              <span class="print-legend-val">${ageVal}</span>
+              <span class="print-legend-ref">P5: 37.0 – P95: 68.0 yrs</span>
+            </div>
+            <div class="print-legend-item">
+              <span class="print-legend-title">Resting BP</span>
+              <span class="print-legend-val">${rbpVal}</span>
+              <span class="print-legend-ref">P5: 107.6 – P95: 160.0 mmHg</span>
+            </div>
+            <div class="print-legend-item">
+              <span class="print-legend-title">Cholesterol</span>
+              <span class="print-legend-val">${hasChol ? `${payload.Cholesterol} mg/dL` : 'Not provided'}</span>
+              <span class="print-legend-ref">P5: 165.2 – P95: 339.8 mg/dL</span>
+            </div>
+            <div class="print-legend-item">
+              <span class="print-legend-title">Max Heart Rate</span>
+              <span class="print-legend-val">${maxHrVal}</span>
+              <span class="print-legend-ref">P5: 96.0 – P95: 178.0 bpm</span>
+            </div>
+            <div class="print-legend-item">
+              <span class="print-legend-title">Oldpeak (ST Dep)</span>
+              <span class="print-legend-val">${oldpeakVal}</span>
+              <span class="print-legend-ref">P5: 0.0 – P95: 3.0 mm (≤ 0 at centre)</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (printVizNote) {
+        printVizNote.textContent = 'The chart visualizes your submitted clinical measurements relative to reference ranges from the Major Assessment training dataset. Measurements at or below the lower reference boundary (such as negative Oldpeak values) are plotted at the centre (≤ 0.0 mm). Refer to the submitted values table for exact measurements.';
+      }
+
+    } else {
+      // Minor Assessment (Simple Assessment)
+      if (printMeasurementsHeader) printMeasurementsHeader.textContent = 'Health Measurements';
+      if (printIndicatorsHeader) printIndicatorsHeader.textContent = 'Lifestyle & Additional Indicators';
+
+      const heightM = payload && payload.height ? (parseFloat(payload.height) / 100) : 0;
+      const weightKg = payload && payload.weight ? parseFloat(payload.weight) : 0;
+      const bmiCalc = (heightM > 0 && weightKg > 0) ? (weightKg / (heightM * heightM)).toFixed(1) : '--';
+
+      const ageVal = payload && payload.age !== undefined ? `${payload.age} yrs` : 'Not provided';
+      const sexVal = payload && payload.gender === 2 ? 'Male' : (payload && payload.gender === 1 ? 'Female' : 'Not provided');
+      const heightVal = payload && payload.height !== undefined ? `${payload.height} cm` : 'Not provided';
+      const weightVal = payload && payload.weight !== undefined ? `${payload.weight} kg` : 'Not provided';
+      const sysVal = payload && payload.ap_hi !== undefined ? `${payload.ap_hi} mmHg` : 'Not provided';
+      const diaVal = payload && payload.ap_lo !== undefined ? `${payload.ap_lo} mmHg` : 'Not provided';
+
+      if (printMeasurementsBody) {
+        printMeasurementsBody.innerHTML = `
+          <tr>
+            <td>Age</td>
+            <td>${ageVal}</td>
+            <td>Dataset P5–P95: 41.2 – 63.7 yrs</td>
+          </tr>
+          <tr>
+            <td>Biological Sex</td>
+            <td>${sexVal}</td>
+            <td>Baseline Demographic</td>
+          </tr>
+          <tr>
+            <td>Standing Height</td>
+            <td>${heightVal}</td>
+            <td>General Population</td>
+          </tr>
+          <tr>
+            <td>Body Weight</td>
+            <td>${weightVal}</td>
+            <td>General Population</td>
+          </tr>
+          <tr>
+            <td>Body Mass Index (BMI)</td>
+            <td>${bmiCalc} kg/m²</td>
+            <td>Dataset P5–P95: 20.9 – 37.3 kg/m²</td>
+          </tr>
+          <tr>
+            <td>Systolic Blood Pressure</td>
+            <td>${sysVal}</td>
+            <td>Dataset P5–P95: 100.0 – 160.0 mmHg</td>
+          </tr>
+          <tr>
+            <td>Diastolic Blood Pressure</td>
+            <td>${diaVal}</td>
+            <td>Dataset P5–P95: 70.0 – 100.0 mmHg</td>
+          </tr>
+        `;
+      }
+
+      // Map Minor Categorical Indicators
+      const cholMap = { 1: 'Normal', 2: 'Above normal', 3: 'Well above normal' };
+      const cholVal = payload && cholMap[payload.cholesterol] ? cholMap[payload.cholesterol] : 'Normal';
+
+      const glucMap = { 1: 'Normal', 2: 'Above normal', 3: 'Well above normal' };
+      const glucVal = payload && glucMap[payload.gluc] ? glucMap[payload.gluc] : 'Normal';
+
+      const smokeVal = payload && (payload.smoke === 1 || payload.smoke === '1') ? 'Yes (Active smoker)' : 'No (Non-smoker)';
+      const alcoVal = payload && (payload.alco === 1 || payload.alco === '1') ? 'Yes (Drinks alcohol)' : 'No (Rarely or never)';
+      const activeVal = payload && (payload.active === 1 || payload.active === '1') ? 'Active (Regular activity)' : 'Inactive';
+
+      if (printIndicatorsBody) {
+        printIndicatorsBody.innerHTML = `
+          <tr>
+            <td>Serum Cholesterol</td>
+            <td>${cholVal}</td>
+          </tr>
+          <tr>
+            <td>Blood Glucose</td>
+            <td>${glucVal}</td>
+          </tr>
+          <tr>
+            <td>Active Smoking</td>
+            <td>${smokeVal}</td>
+          </tr>
+          <tr>
+            <td>Alcohol Intake</td>
+            <td>${alcoVal}</td>
+          </tr>
+          <tr>
+            <td>Physical Activity</td>
+            <td>${activeVal}</td>
+          </tr>
+        `;
+      }
+
+      // Minor Visualization & Legend
+      if (printVizChartWrap && minorRadarSvg) {
+        printVizChartWrap.innerHTML = minorRadarSvg.outerHTML;
+      }
+
+      if (printVizLegendWrap) {
+        printVizLegendWrap.innerHTML = `
+          <div class="print-legend-grid">
+            <div class="print-legend-item">
+              <span class="print-legend-title">Age</span>
+              <span class="print-legend-val">${ageVal}</span>
+              <span class="print-legend-ref">P5: 41.2 – P95: 63.7 yrs</span>
+            </div>
+            <div class="print-legend-item">
+              <span class="print-legend-title">Body Mass Index</span>
+              <span class="print-legend-val">${bmiCalc} kg/m²</span>
+              <span class="print-legend-ref">P5: 20.9 – P95: 37.3 kg/m²</span>
+            </div>
+            <div class="print-legend-item">
+              <span class="print-legend-title">Systolic BP</span>
+              <span class="print-legend-val">${sysVal}</span>
+              <span class="print-legend-ref">P5: 100.0 – P95: 160.0 mmHg</span>
+            </div>
+            <div class="print-legend-item">
+              <span class="print-legend-title">Diastolic BP</span>
+              <span class="print-legend-val">${diaVal}</span>
+              <span class="print-legend-ref">P5: 70.0 – P95: 100.0 mmHg</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (printVizNote) {
+        printVizNote.textContent = 'The chart visualizes your submitted measurements relative to reference ranges from the Minor Assessment training dataset. It does not represent medical risk, clinical thresholds, or the contribution of individual features to the model\'s prediction.';
+      }
+    }
   }
 
   // ==========================================
-  // Modals & API Configuration
+  // Major Assessment: Health Measurements Visualization
   // ==========================================
-  function setupModals() {
-    // API Configuration Modal
-    if (apiConfigBtn && apiModal) {
-      apiConfigBtn.addEventListener('click', () => {
-        if (apiUrlInput) apiUrlInput.value = state.apiBaseUrl;
-        apiModal.classList.remove('hidden');
-      });
+  function renderMajorHealthMeasurements(payload) {
+    if (!majorRadarPolygon) return;
 
-      if (closeApiBtn) {
-        closeApiBtn.addEventListener('click', () => {
-          apiModal.classList.add('hidden');
-        });
+    // 1. Extract values
+    const age = parseFloat(payload.Age) || 0;
+    const restingBP = parseFloat(payload.RestingBP) || 0;
+    const maxHR = parseFloat(payload.MaxHR) || 0;
+    const oldpeak = typeof payload.Oldpeak === 'number' ? payload.Oldpeak : (parseFloat(payload.Oldpeak) || 0);
+
+    // Check if Cholesterol was provided and > 0
+    const rawChol = payload.Cholesterol;
+    const hasChol = !(rawChol === null || rawChol === undefined || rawChol === '' || parseFloat(rawChol) === 0 || isNaN(parseFloat(rawChol)));
+    const chol = hasChol ? parseFloat(rawChol) : 0;
+
+    // 2. Reference percentiles (P5, P95 from cleaned heart.csv, 917 records)
+    const ref = {
+      age: { p5: 37.0, p95: 68.0 },
+      rbp: { p5: 107.6, p95: 160.0 },
+      chol: { p5: 165.25, p95: 339.75 },
+      maxhr: { p5: 96.0, p95: 178.0 },
+      oldpeak: { p5: 0.0, p95: 3.0 }
+    };
+
+    // 3. Normalization and clamping to 0-100%
+    function calcNorm(val, p5, p95) {
+      if (p95 === p5) return 50;
+      const pct = ((val - p5) / (p95 - p5)) * 100;
+      return Math.max(0, Math.min(100, pct));
+    }
+
+    const normAge = calcNorm(age, ref.age.p5, ref.age.p95);
+    const normRBP = calcNorm(restingBP, ref.rbp.p5, ref.rbp.p95);
+    const normChol = hasChol ? calcNorm(chol, ref.chol.p5, ref.chol.p95) : 0;
+    const normMaxHR = calcNorm(maxHR, ref.maxhr.p5, ref.maxhr.p95);
+    const normOldpeak = calcNorm(oldpeak, ref.oldpeak.p5, ref.oldpeak.p95);
+
+    // 4. Radar geometry: Center (170, 170), Max Radius = 110
+    const center = 170;
+    const maxRadius = 110;
+
+    // Angles for the 5 axes (degrees):
+    // Age: -90° (Top)
+    // RestingBP: -18° (Top-Right)
+    // Cholesterol: 54° (Bottom-Right)
+    // MaxHR: 126° (Bottom-Left)
+    // Oldpeak: 198° (Top-Left)
+    function getPoint(deg, normVal) {
+      const rad = (deg * Math.PI) / 180;
+      const r = (normVal / 100) * maxRadius;
+      return {
+        x: center + r * Math.cos(rad),
+        y: center + r * Math.sin(rad)
+      };
+    }
+
+    const pAge = getPoint(-90, normAge);
+    const pRBP = getPoint(-18, normRBP);
+    const pChol = hasChol ? getPoint(54, normChol) : null;
+    const pMaxHR = getPoint(126, normMaxHR);
+    const pOldpeak = getPoint(198, normOldpeak);
+
+    // 5. Update Dynamic Polygon / Path and Vertex Dots
+    if (hasChol) {
+      // Complete 5-axis profile: Closed polygon path
+      const d = `M ${pAge.x.toFixed(1)},${pAge.y.toFixed(1)} L ${pRBP.x.toFixed(1)},${pRBP.y.toFixed(1)} L ${pChol.x.toFixed(1)},${pChol.y.toFixed(1)} L ${pMaxHR.x.toFixed(1)},${pMaxHR.y.toFixed(1)} L ${pOldpeak.x.toFixed(1)},${pOldpeak.y.toFixed(1)} Z`;
+      majorRadarPolygon.setAttribute('d', d);
+      majorRadarPolygon.classList.remove('has-missing-axis');
+
+      if (majorDotChol) {
+        majorDotChol.style.display = '';
+        majorDotChol.setAttribute('cx', pChol.x.toFixed(1));
+        majorDotChol.setAttribute('cy', pChol.y.toFixed(1));
       }
 
-      if (saveApiBtn) {
-        saveApiBtn.addEventListener('click', () => {
-          if (apiUrlInput) {
-            const newUrl = apiUrlInput.value.trim().replace(/\/+$/, '');
-            if (newUrl) {
-              state.apiBaseUrl = newUrl;
-              localStorage.setItem('cardiopredict_api_url', newUrl);
-              showToast(`API endpoint saved: ${newUrl}`, 'success');
-            }
-          }
-          apiModal.classList.add('hidden');
-        });
+      if (majorAxisLineChol) {
+        majorAxisLineChol.classList.remove('axis-dashed-missing');
       }
 
-      if (testConnectionBtn) {
-        testConnectionBtn.addEventListener('click', async () => {
-          const testUrl = apiUrlInput ? apiUrlInput.value.trim().replace(/\/+$/, '') : state.apiBaseUrl;
-          try {
-            const resp = await fetch(`${testUrl}/health`);
-            if (resp.ok) {
-              const data = await resp.json();
-              showToast(`Backend connection healthy (${data.status || 'OK'})`, 'success');
-            } else {
-              showToast(`Server returned HTTP ${resp.status}`, 'warning');
-            }
-          } catch (err) {
-            showToast(`Connection failed: ${err.message}`, 'error');
-          }
-        });
+      if (majorAxisLabelChol) {
+        majorAxisLabelChol.textContent = 'Cholesterol';
+      }
+
+      if (majorRadarValChol) {
+        majorRadarValChol.textContent = `${Math.round(chol)} mg/dL`;
+        majorRadarValChol.classList.remove('not-provided');
+      }
+    } else {
+      // Missing cholesterol: Open path drawing ONLY available adjacent segments
+      // RestingBP -> Age -> Oldpeak -> MaxHR (leaving a visible gap across the Cholesterol axis)
+      // RestingBP is NOT connected to MaxHR
+      const d = `M ${pRBP.x.toFixed(1)},${pRBP.y.toFixed(1)} L ${pAge.x.toFixed(1)},${pAge.y.toFixed(1)} L ${pOldpeak.x.toFixed(1)},${pOldpeak.y.toFixed(1)} L ${pMaxHR.x.toFixed(1)},${pMaxHR.y.toFixed(1)}`;
+      majorRadarPolygon.setAttribute('d', d);
+      majorRadarPolygon.classList.add('has-missing-axis');
+
+      if (majorDotChol) {
+        majorDotChol.style.display = 'none';
+      }
+
+      if (majorAxisLineChol) {
+        majorAxisLineChol.classList.add('axis-dashed-missing');
+      }
+
+      if (majorAxisLabelChol) {
+        majorAxisLabelChol.textContent = 'Cholesterol (Not provided)';
+      }
+
+      if (majorRadarValChol) {
+        majorRadarValChol.textContent = 'Not provided';
+        majorRadarValChol.classList.add('not-provided');
       }
     }
 
+    if (majorDotAge) {
+      majorDotAge.setAttribute('cx', pAge.x.toFixed(1));
+      majorDotAge.setAttribute('cy', pAge.y.toFixed(1));
+    }
+    if (majorDotRestingBP) {
+      majorDotRestingBP.setAttribute('cx', pRBP.x.toFixed(1));
+      majorDotRestingBP.setAttribute('cy', pRBP.y.toFixed(1));
+    }
+    if (majorDotMaxHR) {
+      majorDotMaxHR.setAttribute('cx', pMaxHR.x.toFixed(1));
+      majorDotMaxHR.setAttribute('cy', pMaxHR.y.toFixed(1));
+    }
+    if (majorDotOldpeak) {
+      majorDotOldpeak.setAttribute('cx', pOldpeak.x.toFixed(1));
+      majorDotOldpeak.setAttribute('cy', pOldpeak.y.toFixed(1));
+    }
+
+    // 6. Update Legend Values (Always actual submitted measurements)
+    if (majorRadarValAge) majorRadarValAge.textContent = `${Math.round(age)} yrs`;
+    if (majorRadarValRestingBP) majorRadarValRestingBP.textContent = `${Math.round(restingBP)} mmHg`;
+    if (majorRadarValMaxHR) majorRadarValMaxHR.textContent = `${Math.round(maxHR)} bpm`;
+    if (majorRadarValOldpeak) majorRadarValOldpeak.textContent = `${oldpeak.toFixed(1)} mm`;
+
+    // 7. Update Categorical & Clinical Grid (6 cards)
+    const sexMap = { M: 'Male', F: 'Female' };
+    const chestPainMap = {
+      ASY: 'Asymptomatic',
+      NAP: 'Non-Anginal Pain',
+      ATA: 'Atypical Angina',
+      TA: 'Typical Angina'
+    };
+    const ecgMap = {
+      Normal: 'Normal',
+      ST: 'ST-T Wave Abnormality',
+      LVH: 'Left Ventricular Hypertrophy'
+    };
+    const slopeMap = {
+      Up: 'Upsloping',
+      Flat: 'Flat',
+      Down: 'Downsloping'
+    };
+
+    if (majorValSex) {
+      majorValSex.textContent = sexMap[payload.Sex] || payload.Sex || '--';
+    }
+    if (majorValChestPainType) {
+      majorValChestPainType.textContent = chestPainMap[payload.ChestPainType] || payload.ChestPainType || '--';
+    }
+    if (majorValFastingBS) {
+      majorValFastingBS.textContent = parseInt(payload.FastingBS, 10) === 1 ? 'Elevated' : 'Normal';
+    }
+    if (majorValRestingECG) {
+      majorValRestingECG.textContent = ecgMap[payload.RestingECG] || payload.RestingECG || '--';
+    }
+    if (majorValExerciseAngina) {
+      majorValExerciseAngina.textContent = payload.ExerciseAngina === 'Y' ? 'Yes' : 'No';
+    }
+    if (majorValSTSlope) {
+      majorValSTSlope.textContent = slopeMap[payload.ST_Slope] || payload.ST_Slope || '--';
+    }
+  }
+
+  // ==========================================
+  // Minor Assessment: Health Measurements Visualization
+  // ==========================================
+  function renderMinorHealthMeasurements(payload) {
+    if (!minorRadarPolygon) return;
+
+    // 1. Extract values
+    const age = parseFloat(payload.age) || 0;
+    const height = parseFloat(payload.height) || 170;
+    const weight = parseFloat(payload.weight) || 70;
+    const ap_hi = parseFloat(payload.ap_hi) || 120;
+    const ap_lo = parseFloat(payload.ap_lo) || 80;
+
+    // 2. Compute BMI: weight (kg) / (height (m))^2
+    const heightM = height / 100;
+    const bmi = heightM > 0 ? (weight / (heightM * heightM)) : 0;
+
+    // 3. Dataset reference percentiles (P5, P95 from cleaned Minor dataset, 68,640 records)
+    const ref = {
+      age: { p5: 41.2, p95: 63.7 },
+      bmi: { p5: 20.9, p95: 37.3 },
+      sys: { p5: 100.0, p95: 160.0 },
+      dia: { p5: 70.0, p95: 100.0 }
+    };
+
+    // 4. Normalization and clamping to 0-100%
+    function calcNorm(val, p5, p95) {
+      if (p95 === p5) return 50;
+      const pct = ((val - p5) / (p95 - p5)) * 100;
+      return Math.max(0, Math.min(100, pct));
+    }
+
+    const normAge = calcNorm(age, ref.age.p5, ref.age.p95);
+    const normBmi = calcNorm(bmi, ref.bmi.p5, ref.bmi.p95);
+    const normSys = calcNorm(ap_hi, ref.sys.p5, ref.sys.p95);
+    const normDia = calcNorm(ap_lo, ref.dia.p5, ref.dia.p95);
+
+    // 5. Radar geometry: Center (170, 170), Max Radius = 110
+    const center = 170;
+    const maxRadius = 110;
+
+    const rAge = (normAge / 100) * maxRadius;
+    const rBmi = (normBmi / 100) * maxRadius;
+    const rSys = (normSys / 100) * maxRadius;
+    const rDia = (normDia / 100) * maxRadius;
+
+    // 4-axis points:
+    // Age (Top, -90°): (170, 170 - rAge)
+    // BMI (Right, 0°): (170 + rBmi, 170)
+    // Systolic (Bottom, 90°): (170, 170 + rSys)
+    // Diastolic (Left, 180°): (170 - rDia, 170)
+    const pAge = { x: center, y: center - rAge };
+    const pBmi = { x: center + rBmi, y: center };
+    const pSys = { x: center, y: center + rSys };
+    const pDia = { x: center - rDia, y: center };
+
+    minorRadarPolygon.setAttribute(
+      'points',
+      `${pAge.x.toFixed(1)},${pAge.y.toFixed(1)} ${pBmi.x.toFixed(1)},${pBmi.y.toFixed(1)} ${pSys.x.toFixed(1)},${pSys.y.toFixed(1)} ${pDia.x.toFixed(1)},${pDia.y.toFixed(1)}`
+    );
+
+    if (minorDotAge) {
+      minorDotAge.setAttribute('cx', pAge.x.toFixed(1));
+      minorDotAge.setAttribute('cy', pAge.y.toFixed(1));
+    }
+    if (minorDotBMI) {
+      minorDotBMI.setAttribute('cx', pBmi.x.toFixed(1));
+      minorDotBMI.setAttribute('cy', pBmi.y.toFixed(1));
+    }
+    if (minorDotSys) {
+      minorDotSys.setAttribute('cx', pSys.x.toFixed(1));
+      minorDotSys.setAttribute('cy', pSys.y.toFixed(1));
+    }
+    if (minorDotDia) {
+      minorDotDia.setAttribute('cx', pDia.x.toFixed(1));
+      minorDotDia.setAttribute('cy', pDia.y.toFixed(1));
+    }
+
+    // 6. Update Legend Values (Always actual submitted measurements)
+    if (minorRadarValAge) minorRadarValAge.textContent = `${Math.round(age)} yrs`;
+    if (minorRadarValBMI) minorRadarValBMI.textContent = `${bmi.toFixed(1)} kg/m²`;
+    if (minorRadarValSysBP) minorRadarValSysBP.textContent = `${Math.round(ap_hi)} mmHg`;
+    if (minorRadarValDiaBP) minorRadarValDiaBP.textContent = `${Math.round(ap_lo)} mmHg`;
+
+    // 7. Update Categorical & Lifestyle Grid
+    const cholMap = { 1: 'Normal', 2: 'Above Normal', 3: 'Well Above Normal' };
+    const glucMap = { 1: 'Normal', 2: 'Above Normal', 3: 'Well Above Normal' };
+
+    if (minorValCholesterol) {
+      minorValCholesterol.textContent = cholMap[payload.cholesterol] || `Level ${payload.cholesterol}`;
+    }
+    if (minorValGlucose) {
+      minorValGlucose.textContent = glucMap[payload.gluc] || `Level ${payload.gluc}`;
+    }
+    if (minorValSmoke) {
+      minorValSmoke.textContent = parseInt(payload.smoke, 10) === 1 ? 'Smoker' : 'Non-smoker';
+    }
+    if (minorValAlco) {
+      minorValAlco.textContent = parseInt(payload.alco, 10) === 1 ? 'Regular' : 'Rarely or never';
+    }
+    if (minorValActive) {
+      minorValActive.textContent = parseInt(payload.active, 10) === 1 ? 'Active' : 'Inactive';
+    }
+  }
+
+  // ==========================================
+  // Field Information Tooltips Popover
+  // ==========================================
+  function setupFieldTooltips() {
+    const popover = document.getElementById('fieldTooltipPopover');
+    const titleEl = document.getElementById('tooltipPopoverTitle');
+    const descEl = document.getElementById('tooltipPopoverDesc');
+    const rangeEl = document.getElementById('tooltipPopoverRange');
+    const rangeBox = document.getElementById('tooltipPopoverRangeBox');
+    const closeBtn = document.getElementById('tooltipPopoverClose');
+    if (!popover || !titleEl || !descEl || !rangeEl) return;
+
+    let activeBtn = null;
+    let hideTimer = null;
+
+    function showTooltip(btn) {
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+      activeBtn = btn;
+      const title = btn.getAttribute('data-title') || 'Biomarker Information';
+      const tip = btn.getAttribute('data-tip') || '';
+      const range = btn.getAttribute('data-range') || '';
+
+      titleEl.textContent = title;
+      descEl.textContent = tip;
+      if (range) {
+        rangeEl.textContent = range;
+        if (rangeBox) rangeBox.style.display = 'flex';
+      } else {
+        if (rangeBox) rangeBox.style.display = 'none';
+      }
+
+      popover.classList.remove('hidden');
+      positionPopover(btn);
+    }
+
+    function hideTooltip() {
+      popover.classList.add('hidden');
+      activeBtn = null;
+    }
+
+    function positionPopover(btn) {
+      const btnRect = btn.getBoundingClientRect();
+      const popoverRect = popover.getBoundingClientRect();
+      const margin = 8;
+      const scrollY = window.scrollY || window.pageYOffset;
+      const scrollX = window.scrollX || window.pageXOffset;
+
+      // Center horizontally on button, clamped to screen margins
+      let left = btnRect.left + scrollX + btnRect.width / 2 - popoverRect.width / 2;
+      const minLeft = scrollX + 12;
+      const maxLeft = scrollX + document.documentElement.clientWidth - popoverRect.width - 12;
+      if (left < minLeft) left = minLeft;
+      if (left > maxLeft) left = maxLeft;
+
+      // Position above if possible, else below
+      let top = btnRect.top + scrollY - popoverRect.height - margin;
+      if (btnRect.top - popoverRect.height - margin < 10) {
+        // Not enough space above, position below
+        top = btnRect.bottom + scrollY + margin;
+      }
+
+      popover.style.left = `${Math.round(left)}px`;
+      popover.style.top = `${Math.round(top)}px`;
+    }
+
+    const tooltipBtns = document.querySelectorAll('.info-tooltip-btn');
+    tooltipBtns.forEach((btn) => {
+      // Desktop Hover
+      btn.addEventListener('mouseenter', () => {
+        showTooltip(btn);
+      });
+
+      btn.addEventListener('mouseleave', () => {
+        hideTimer = setTimeout(() => {
+          hideTooltip();
+        }, 180);
+      });
+
+      // Keyboard Focus
+      btn.addEventListener('focus', () => {
+        showTooltip(btn);
+      });
+
+      btn.addEventListener('blur', () => {
+        hideTooltip();
+      });
+
+      // Mobile / Click Toggle
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (activeBtn === btn && !popover.classList.contains('hidden')) {
+          hideTooltip();
+        } else {
+          showTooltip(btn);
+        }
+      });
+    });
+
+    // Keep tooltip open while hovering the popover itself
+    popover.addEventListener('mouseenter', () => {
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+    });
+
+    popover.addEventListener('mouseleave', () => {
+      hideTimer = setTimeout(() => {
+        hideTooltip();
+      }, 180);
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideTooltip();
+      });
+    }
+
+    // Dismiss on outside click
+    document.addEventListener('click', (e) => {
+      if (!popover.classList.contains('hidden') && !popover.contains(e.target)) {
+        hideTooltip();
+      }
+    });
+
+    // Dismiss on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !popover.classList.contains('hidden')) {
+        hideTooltip();
+      }
+    });
+
+    // Reposition on window resize
+    window.addEventListener('resize', () => {
+      if (activeBtn && !popover.classList.contains('hidden')) {
+        positionPopover(activeBtn);
+      }
+    });
+  }
+
+  // ==========================================
+  // Modals & Glossaries
+  // ==========================================
+  function setupModals() {
     // Glossary Modal
     if (glossaryBtn && glossaryModal) {
       glossaryBtn.addEventListener('click', () => {
@@ -1586,10 +2504,22 @@
     }, 4000);
   }
 
-  // Launch on DOM Content Loaded
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  // Expose for testing & deterministic verification
+  if (typeof window !== 'undefined') {
+    window.resolvePrediction = resolvePrediction;
+    window.displayResults = displayResults;
+    window.updatePrintReport = updatePrintReport;
+  }
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { resolvePrediction, displayResults, updatePrintReport };
+  }
+
+  // Launch on DOM Content Loaded (Browser runtime)
+  if (typeof window !== 'undefined' && typeof document !== 'undefined' && typeof module === 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
   }
 })();

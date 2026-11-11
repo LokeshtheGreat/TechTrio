@@ -846,24 +846,138 @@ body {
   border-color: var(--primary);
 }
 
+/* Interactive Biomarker Field Tooltip Popover */
+.field-tooltip-popover {
+  position: absolute;
+  z-index: 1050;
+  max-width: 320px;
+  width: calc(100vw - 32px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  pointer-events: auto;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.field-tooltip-popover.hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transform: translateY(4px);
+}
+
+.field-tooltip-popover .tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.field-tooltip-popover .tooltip-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.field-tooltip-popover .tooltip-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.field-tooltip-popover .tooltip-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.field-tooltip-popover .tooltip-desc {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.field-tooltip-popover .tooltip-range-box {
+  background: var(--bg-alt);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.76rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.field-tooltip-popover .tooltip-range-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
 .input-with-affix {
   position: relative;
   display: flex;
   align-items: center;
 }
 
+.input-with-affix input[type="number"],
 .input-with-affix input {
-  padding-right: 4.2rem;
+  padding-right: 5.25rem;
+}
+
+.input-with-affix input[type="number"]::-webkit-inner-spin-button,
+.input-with-affix input[type="number"]::-webkit-outer-spin-button {
+  margin-right: -4.5rem;
+  cursor: pointer;
+}
+
+.input-with-affix input[type="number"]:hover::-webkit-inner-spin-button,
+.input-with-affix input[type="number"]:focus::-webkit-inner-spin-button {
+  opacity: 1;
 }
 
 .affix {
   position: absolute;
-  right: 0.85rem;
+  right: 2rem;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
   pointer-events: none;
   font-family: var(--font-mono);
+  line-height: 1;
+  user-select: none;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+/* Compact dual inputs in BMI Imperial modal */
+.bmi-ft-in-flex .input-with-affix input[type="number"],
+.bmi-ft-in-flex .input-with-affix input {
+  padding-right: 3.5rem;
+}
+
+.bmi-ft-in-flex .input-with-affix input[type="number"]::-webkit-inner-spin-button,
+.bmi-ft-in-flex .input-with-affix input[type="number"]::-webkit-outer-spin-button {
+  margin-right: -2.75rem;
+}
+
+.bmi-ft-in-flex .affix {
+  right: 1.85rem;
 }
 
 input[type="number"],
@@ -992,6 +1106,15 @@ select:focus {
   transition: var(--transition);
 }
 
+.segment-btn * {
+  pointer-events: none;
+}
+
+.segment-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 .segment-btn:hover {
   color: var(--text-primary);
 }
@@ -1025,6 +1148,16 @@ select:focus {
   transition: var(--transition);
   display: flex;
   flex-direction: column;
+  user-select: none;
+}
+
+.chest-card * {
+  pointer-events: none;
+}
+
+.chest-card:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .chest-card:hover {
@@ -1270,9 +1403,13 @@ select:focus {
 
 .outcome-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   margin-bottom: 2rem;
+}
+
+.outcome-grid.single-column {
+  grid-template-columns: 1fr;
 }
 
 .outcome-card {
@@ -1311,6 +1448,11 @@ select:focus {
   border-color: var(--success);
 }
 
+.status-indeterminate .status-indicator-box {
+  background-color: var(--warning-light);
+  border-color: var(--warning);
+}
+
 .status-icon-wrapper {
   width: 52px;
   height: 52px;
@@ -1331,6 +1473,11 @@ select:focus {
   color: #fff;
 }
 
+.status-indeterminate .status-icon-wrapper {
+  background-color: var(--warning);
+  color: #fff;
+}
+
 .status-headline {
   font-size: 1.2rem;
   font-weight: 800;
@@ -1340,6 +1487,7 @@ select:focus {
 
 .status-positive .status-headline { color: var(--danger); }
 .status-negative .status-headline { color: var(--success); }
+.status-indeterminate .status-headline { color: var(--warning); }
 
 .status-subtext {
   font-size: 0.82rem;
@@ -1514,6 +1662,156 @@ select:focus {
 .chol-dot { background: #3b82f6; }
 .angina-dot { background: #8b5cf6; }
 .st-dot { background: #ec4899; }
+
+.age-dot { background: #0ea5e9; }
+.bmi-dot { background: #10b981; }
+.sys-dot { background: #f59e0b; }
+.dia-dot { background: #8b5cf6; }
+.rbp-dot { background: #f59e0b; }
+.oldpeak-dot { background: #ec4899; }
+
+.radar-polygon.major-polygon {
+  fill: url(#majorRadarAreaGradient);
+  stroke: #f43f5e;
+  filter: drop-shadow(0 4px 10px rgba(244, 63, 94, 0.35));
+}
+
+.radar-polygon.has-missing-axis {
+  fill: none !important;
+}
+
+.radar-vertex-dot.major-dot {
+  fill: #f43f5e;
+  stroke: #ffffff;
+}
+
+.axis-dashed-missing {
+  stroke-dasharray: 4 4 !important;
+  opacity: 0.45 !important;
+}
+
+.radar-metric-val.not-provided {
+  color: var(--text-muted);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.radar-polygon.minor-polygon {
+  fill: url(#minorRadarAreaGradient);
+  stroke: #0ea5e9;
+  filter: drop-shadow(0 4px 10px rgba(14, 165, 233, 0.35));
+}
+
+.radar-vertex-dot {
+  fill: #0ea5e9;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.radar-metric-ref {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-top: 0.15rem;
+}
+
+/* Major Clinical Indicators Grid */
+.major-clinical-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.major-clinical-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+/* Minor Lifestyle Grid */
+.minor-lifestyle-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.minor-lifestyle-heading {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.minor-lifestyle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+}
+
+.lifestyle-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.lifestyle-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.lifestyle-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Minor Chart Explanatory Box */
+.minor-chart-explanation-box {
+  margin-top: 1.25rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.minor-chart-explanation-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.minor-chart-explanation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.minor-chart-explanation-text {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.minor-chart-explanation-subtext {
+  font-size: 0.77rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 0;
+}
 
 .radar-metric-info {
   display: flex;
@@ -2669,4 +2967,492 @@ select:focus {
 
 .rhythm-normal {
     animation-duration: 0.857s;
+}
+
+/* ==========================================
+   Print & PDF Formal Assessment Report Styles
+   ========================================== */
+.print-report-document {
+  display: none;
+}
+
+@media print {
+  /* Set A4 portrait page format & printable margins */
+  @page {
+    size: A4 portrait;
+    margin: 10mm 14mm 12mm 14mm;
+  }
+
+  /* Reset body and document canvas */
+  *, *::before, *::after {
+    box-sizing: border-box !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    font-size: 8.5pt !important;
+    line-height: 1.35 !important;
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide entire interactive web application and decorative hero */
+  body > :not(#printReportDocument),
+  .navbar,
+  .hero-section,
+  .main-container,
+  .mode-selection-wrapper,
+  .form-card-container,
+  .results-container,
+  .results-card,
+  .app-footer,
+  .modal,
+  .modal-backdrop,
+  .toast,
+  .toast-notification,
+  .field-tooltip-popover,
+  #anatomicalPins,
+  #anatomicalTooltip,
+  #cardiacHud,
+  #threeCanvasWrapper,
+  #threeCanvas,
+  button,
+  .btn,
+  .mode-tabs,
+  .theme-dropdown {
+    display: none !important;
+  }
+
+  /* Display formal print document cleanly */
+  .print-report-document {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  /* Prevent awkward page break splits */
+  .print-header,
+  .print-section,
+  .print-result-card,
+  .print-tables-row,
+  .print-table-col,
+  .print-viz-card,
+  .print-disclaimer-grid,
+  .print-doc-footer {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* A. Report Header */
+  .print-header {
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1.5px solid #0f172a;
+  }
+
+  .print-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.35rem;
+  }
+
+  .print-brand-name {
+    font-size: 15pt;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  .print-brand-tagline {
+    font-size: 7.5pt;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  .print-meta-block {
+    text-align: right;
+    font-size: 8pt;
+    color: #475569;
+    line-height: 1.3;
+  }
+
+  .print-meta-row {
+    margin-bottom: 0.1rem;
+  }
+
+  .print-meta-label {
+    font-weight: 600;
+    color: #64748b;
+    margin-right: 0.25rem;
+  }
+
+  .print-meta-value {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .print-header-line {
+    display: none;
+  }
+
+  .print-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.35rem;
+  }
+
+  .print-document-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .print-mode-pill {
+    font-size: 7.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.55rem;
+    border-radius: 9999px;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+  }
+
+  /* Section Titles */
+  .print-section {
+    margin-bottom: 0.65rem;
+  }
+
+  .print-section-heading {
+    font-size: 9pt;
+    font-weight: 700;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 0 0 0.35rem 0;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  /* B. Assessment Result Card */
+  .print-result-card {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 4px;
+    border: 1.5px solid #cbd5e1;
+    background: #f8fafc;
+  }
+
+  .print-result-card.status-positive {
+    background: #fff1f2 !important;
+    border-color: #e11d48 !important;
+  }
+
+  .print-result-card.status-negative {
+    background: #ecfdf5 !important;
+    border-color: #059669 !important;
+  }
+
+  .print-result-card.status-indeterminate {
+    background: #fffbeb !important;
+    border-color: #d97706 !important;
+  }
+
+  .print-result-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .status-positive .print-result-icon {
+    background: #e11d48 !important;
+    color: #ffffff !important;
+  }
+
+  .status-negative .print-result-icon {
+    background: #059669 !important;
+    color: #ffffff !important;
+  }
+
+  .status-indeterminate .print-result-icon {
+    background: #d97706 !important;
+    color: #ffffff !important;
+  }
+
+  .print-result-content-col {
+    flex: 1;
+  }
+
+  .print-result-caption {
+    font-size: 6.8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 0.1rem;
+  }
+
+  .print-result-headline {
+    font-size: 11.5pt;
+    font-weight: 800;
+    margin: 0 0 0.1rem 0;
+    color: #0f172a;
+  }
+
+  .status-positive .print-result-headline { color: #be123c !important; }
+  .status-negative .print-result-headline { color: #047857 !important; }
+  .status-indeterminate .print-result-headline { color: #b45309 !important; }
+
+  .print-result-subtext {
+    font-size: 7.8pt;
+    color: #334155;
+    line-height: 1.3;
+  }
+
+  /* C. Submitted Assessment Tables */
+  .print-tables-row {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .print-table-col {
+    flex: 1;
+  }
+
+  .print-table-header {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 0.25rem;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.8pt;
+  }
+
+  .print-table th,
+  .print-table td {
+    padding: 0.22rem 0.4rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .print-table th {
+    background: #f1f5f9 !important;
+    color: #334155 !important;
+    font-weight: 700;
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-top: 1px solid #cbd5e1;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  .print-table tr:last-child td {
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  .print-table td:nth-child(2) {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .print-table td:last-child {
+    color: #64748b;
+    font-size: 7.2pt;
+    font-family: var(--font-mono, monospace);
+  }
+
+  .print-val-not-provided {
+    color: #94a3b8 !important;
+    font-style: italic;
+    font-weight: normal !important;
+  }
+
+  .print-table-note {
+    font-size: 6.8pt;
+    color: #64748b;
+    line-height: 1.35;
+    margin: 0.35rem 0 0 0;
+    padding-left: 0.15rem;
+  }
+
+  /* D. Measurement Visualization Section */
+  .print-viz-card {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0.45rem 0.65rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+  }
+
+  .print-viz-chart-wrap {
+    width: 165px;
+    height: 165px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .print-viz-chart-wrap svg {
+    width: 165px !important;
+    height: 165px !important;
+    overflow: visible;
+  }
+
+  .print-viz-chart-wrap .radar-grid-ring {
+    stroke: #cbd5e1 !important;
+    fill: none !important;
+    stroke-width: 1px !important;
+  }
+
+  .print-viz-chart-wrap .radar-axis-line {
+    stroke: #94a3b8 !important;
+    stroke-width: 1px !important;
+  }
+
+  .print-viz-chart-wrap .radar-axis-text {
+    fill: #0f172a !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    font-family: sans-serif !important;
+  }
+
+  .print-viz-chart-wrap .radar-polygon.major-polygon {
+    fill: rgba(244, 63, 94, 0.18) !important;
+    stroke: #e11d48 !important;
+    stroke-width: 2px !important;
+    filter: none !important;
+  }
+
+  .print-viz-chart-wrap .radar-polygon.minor-polygon {
+    fill: rgba(14, 165, 233, 0.18) !important;
+    stroke: #0284c7 !important;
+    stroke-width: 2px !important;
+    filter: none !important;
+  }
+
+  .print-viz-chart-wrap .radar-polygon.has-missing-axis {
+    fill: none !important;
+  }
+
+  .print-viz-chart-wrap .radar-vertex-dot {
+    stroke: #ffffff !important;
+    stroke-width: 1.5px !important;
+  }
+
+  .print-viz-legend-wrap {
+    flex: 1;
+  }
+
+  .print-legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.75rem;
+  }
+
+  .print-legend-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-size: 7.4pt;
+  }
+
+  .print-legend-title {
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .print-legend-val {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 8pt;
+  }
+
+  .print-legend-ref {
+    color: #64748b;
+    font-size: 6.8pt;
+    font-family: var(--font-mono, monospace);
+  }
+
+  .print-viz-note {
+    font-size: 6.8pt;
+    color: #64748b;
+    line-height: 1.35;
+    margin: 0.25rem 0 0 0;
+    padding-left: 0.15rem;
+  }
+
+  /* E. Disclaimer Section */
+  .print-disclaimer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 0.75rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 0.45rem 0.65rem;
+  }
+
+  .print-disclaimer-card {
+    font-size: 6.9pt;
+    line-height: 1.35;
+    color: #475569;
+  }
+
+  .print-disclaimer-title {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.1rem;
+    font-size: 7.2pt;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .print-disclaimer-card p {
+    margin: 0;
+  }
+
+  .print-doc-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.45rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid #cbd5e1;
+    font-size: 6.8pt;
+    color: #94a3b8;
+    font-weight: 600;
+  }
 }
