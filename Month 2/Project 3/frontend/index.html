@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Risk Estimator | Educational ML Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-icon-wrapper">
+                    <svg class="heart-pulse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path
+                            d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                        <path class="ecg-line" d="M3 12h4l2-4 3 8 2-5 2 2h4" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="brand-title">
+                        <h1>CardioPredict ML</h1>
+                    </span>
+                    <span class="brand-badge">Cardiosense</span>
+                </div>
+            </div>
+            <div class="nav-links">
+                <!-- BMI Calculator Nav Button -->
+                <button class="nav-btn" id="bmiCalculatorBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 16 19 8 22 16c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+                        <path d="M2 16 5 8 8 16c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+                        <path d="M7 21h10" />
+                        <path d="M12 3v18" />
+                        <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
+                    </svg>
+                    BMI Calculator
+                </button>
+
+                <button class="nav-btn" id="glossaryBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <path d="M12 17h.01" />
+                    </svg>
+                    Medical Glossary
+                </button>
+
+                <!-- Multi-Theme Switcher (Clinical Theme) in Right Corner -->
+                <div class="theme-menu-container">
+                    <button class="nav-btn theme-toggle-btn" id="themeBtn" aria-label="Toggle Color Theme">
+                        <span class="theme-icon" id="themeCurrentIcon">🩺</span>
+                        <span class="theme-text" id="themeCurrentLabel">Clinical</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="m6 9 6 6 6-6" />
+                        </svg>
+                    </button>
+                    <div class="theme-dropdown hidden" id="themeDropdown">
+                        <button type="button" class="theme-option-btn active" data-theme="clinical">
+                            <span class="theme-dot clinical-dot"></span>
+                            <div class="theme-option-info">
+                                <strong>Clinical Clean</strong>
+                                <small>Light Medical</small>
+                            </div>
+                        </button>
+                        <button type="button" class="theme-option-btn" data-theme="neon">
+                            <span class="theme-dot neon-dot"></span>
+                            <div class="theme-option-info">
+                                <strong>Neon Midnight</strong>
+                                <small>Cyber Dark HUD</small>
+                            </div>
+                        </button>
+                        <button type="button" class="theme-option-btn" data-theme="sunset">
+                            <span class="theme-dot sunset-dot"></span>
+                            <div class="theme-option-info">
+                                <strong>Sunset Vitality</strong>
+                                <small>Warm Violet Peach</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section with Anatomical Heart Picture -->
+    <section class="hero-section">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-tag">
+                    <span class="pulse-dot"></span>
+                    Machine Learning Risk Classifier
+                </div>
+                <h1 class="hero-heading">
+                    ML-Based <span class="gradient-text">Heart Disease</span> Risk Estimator
+                </h1>
+                <p class="hero-description">
+                    An interactive machine-learning prototype exploring dual assessment pathways: comprehensive clinical
+                    evaluation with 11 biomedical parameters, and an accessible mode for general self-screening.
+                </p>
+            </div>
+
+            <!-- Animated 3D Heart Illustration -->
+            <div class="hero-visual">
+                <div class="heart-illustration-wrapper" aria-hidden="true">
+                    <div class="realistic-heart-container rhythm-normal" id="heartPulseGroup">
+                        <img src="realistic_heart.png" alt="Realistic 3D Human Anatomical Heart"
+                            class="realistic-heart-img" id="realisticHeartImg">
+                        <div class="heart-glow-halo" id="heartAura"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Assessment Mode Switcher Header -->
+    <main class="main-container">
+        <div class="mode-selection-wrapper">
+            <div class="mode-header">
+                <h2 class="section-title">Select Assessment Mode</h2>
+                <p class="section-subtitle">
+                    Choose the assessment type based on the medical details currently available to you.
+                </p>
+            </div>
+
+            <div class="mode-tabs">
+                <button class="mode-tab active" id="tabSimple" data-mode="minor">
+                    <div class="tab-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                    </div>
+                    <div class="tab-text">
+                        <span class="tab-name">Minor Assessment</span>
+                        <span class="tab-desc">A straightforward cardiovascular assessment using everyday health measurements and lifestyle information.</span>
+                    </div>
+                    <span class="badge badge-primary">MINOR</span>
+                </button>
+
+                <button class="mode-tab" id="tabMajor" data-mode="major">
+                    <div class="tab-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
+                    </div>
+                    <div class="tab-text">
+                        <span class="tab-name">Extended Clinical Assessment</span>
+                        <span class="tab-desc">A more detailed assessment using clinical measurements and medical information, intended for healthcare professionals and users familiar with medical terminology.</span>
+                    </div>
+                    <span class="badge badge-secondary">EXTENDED</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Forms Container -->
+        <div class="form-card-container">
+            <div class="form-card">
+
+                <form id="assessmentForm" novalidate>
+
+                    <!-- MAJOR FIELDS CONTAINER -->
+                    <div id="majorFieldsContainer" class="hidden">
+
+                    <!-- GENERAL / DEMOGRAPHIC SECTION (Major Mode) -->
+                    <div class="form-section">
+                        <div class="section-badge">Section 1: General & Patient Demographics</div>
+
+                        <!-- BMI Shortcut & Cardiac Workload Card -->
+                        <div class="bmi-inline-banner" id="bmiInlineBanner">
+                            <div class="bmi-banner-left">
+                                <div class="bmi-banner-icon">⚖️</div>
+                                <div class="bmi-banner-info">
+                                    <strong>Body Mass Index (BMI) & Cardiac Workload Tool</strong>
+                                    <span>Estimate your BMI, evaluate myocardial stroke work, and identify optimal body
+                                        weight
+                                        targets.</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline bmi-open-btn" id="bmiOpenInlineBtn">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M16 16 19 8 22 16c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+                                    <path d="M2 16 5 8 8 16c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+                                    <path d="M7 21h10" />
+                                    <path d="M12 3v18" />
+                                    <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
+                                </svg>
+                                Calculate BMI
+                            </button>
+                        </div>
+
+                        <div class="form-grid">
+
+                            <!-- Age -->
+                            <div class="form-group" id="group-Age">
+                                <label for="inputAge">
+                                    Age (Years) <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Patient Age"
+                                        data-tip="Patient age in completed years."
+                                        data-range="Permissible range: 18 – 100 years.">i</button>
+                                </label>
+                                <div class="input-with-affix">
+                                    <input type="number" id="inputAge" name="Age" min="18" max="100"
+                                        placeholder="e.g. 54" required>
+                                    <span class="affix">yrs</span>
+                                </div>
+                                <span class="field-error" id="error-Age"></span>
+                                <span class="field-hint">Permissible range: 18 – 100 years</span>
+                            </div>
+
+                            <!-- Sex -->
+                            <div class="form-group" id="group-Sex">
+                                <label for="inputSex">
+                                    Biological Sex <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Biological Sex"
+                                        data-tip="Biological sex recorded at birth. Select Male or Female."
+                                        data-range="Select Male or Female.">i</button>
+                                </label>
+                                <select id="inputSex" name="Sex" required>
+                                    <option value="" disabled selected>Select sex...</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                </select>
+                                <span class="field-error" id="error-Sex"></span>
+                            </div>
+
+                            <!-- RestingBP with Interactive Dial/Slider (Feature 4) -->
+                            <div class="form-group" id="group-RestingBP">
+                                <label for="inputRestingBP">
+                                    Resting Blood Pressure <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Resting Blood Pressure"
+                                        data-tip="Resting systolic blood pressure measured in mm Hg."
+                                        data-range="Permissible range: 60 – 240 mm Hg (Optimal: &lt; 120 mm Hg).">i</button>
+                                </label>
+                                <div class="input-with-affix">
+                                    <input type="number" id="inputRestingBP" name="RestingBP" min="60" max="240"
+                                        placeholder="e.g. 130" value="130" required>
+                                    <span class="affix">mm Hg</span>
+                                </div>
+                                <input type="range" class="apple-slider" id="sliderRestingBP" min="80" max="200"
+                                    value="130" step="1">
+                                <div class="dial-status-bar">
+                                    <span class="dial-badge badge-elevated" id="badgeRestingBP">Pre-Hypertension
+                                        (130)</span>
+                                    <span class="dial-range-hint">Optimal: &lt;120 mmHg</span>
+                                </div>
+                                <span class="field-error" id="error-RestingBP"></span>
+                            </div>
+
+                            <!-- MaxHR with Live Pacing Sync (Feature 2 & 4) -->
+                            <div class="form-group" id="group-MaxHR">
+                                <label for="inputMaxHR">
+                                    Maximum Heart Rate (MaxHR) <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Maximum Heart Rate (MaxHR)"
+                                        data-tip="Highest heart rate achieved in beats per minute (bpm) during peak cardiovascular exertion or exercise testing."
+                                        data-range="Permissible range: 60 – 220 bpm.">i</button>
+                                </label>
+                                <div class="input-with-affix">
+                                    <input type="number" id="inputMaxHR" name="MaxHR" min="60" max="220"
+                                        placeholder="e.g. 150" value="130" required>
+                                    <span class="affix">bpm</span>
+                                </div>
+                                <input type="range" class="apple-slider slider-hr" id="sliderMaxHR" min="60" max="210"
+                                    value="130" step="1">
+                                <div class="dial-status-bar">
+                                    <span class="dial-badge badge-target" id="badgeMaxHR">Pacing Heart: 130 BPM</span>
+                                    <span class="dial-range-hint">Syncs with Heart Graphic</span>
+                                </div>
+                                <span class="field-error" id="error-MaxHR"></span>
+                            </div>
+
+                            <!-- ExerciseAngina Segmented Pill Switch (Feature 4) -->
+                            <div class="form-group" id="group-ExerciseAngina">
+                                <label>
+                                    Exercise-Induced Angina <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Exercise-Induced Angina"
+                                        data-tip="Indicates whether chest pain or discomfort was experienced during physical exercise or exertion."
+                                        data-range="Select No Angina or Angina Induced.">i</button>
+                                </label>
+                                <!-- Native select hidden for form payload -->
+                                <select id="inputExerciseAngina" name="ExerciseAngina" class="hidden-native-select"
+                                    required>
+                                    <option value="N" selected>No</option>
+                                    <option value="Y">Yes</option>
+                                </select>
+                                <!-- Segmented Apple Pill Controls -->
+                                <div class="segmented-pill-group" id="anginaPillGroup" role="radiogroup" aria-label="Exercise-Induced Angina">
+                                    <button type="button" class="segment-btn active" data-val="N" data-value="N" role="radio" aria-checked="true" tabindex="0">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                        No Angina
+                                    </button>
+                                    <button type="button" class="segment-btn danger-segment" data-val="Y" data-value="Y" role="radio" aria-checked="false" tabindex="-1">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5">
+                                            <path
+                                                d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                            <line x1="12" y1="9" x2="12" y2="13" />
+                                        </svg>
+                                        Angina Induced
+                                    </button>
+                                </div>
+                                <span class="field-error" id="error-ExerciseAngina"></span>
+                            </div>
+
+                            <!-- ChestPainType 4 Interactive Visual Cards (Feature 4) -->
+                            <div class="form-group form-group-full" id="group-ChestPainType">
+                                <label>
+                                    Chest Pain Type (Angina Sensation) <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Chest Pain Type (Angina Sensation)"
+                                        data-tip="Classification of chest pain: TA (Typical Angina), ATA (Atypical Angina), NAP (Non-Anginal Pain), or ASY (Asymptomatic)."
+                                        data-range="Select ASY, NAP, ATA, or TA.">i</button>
+                                </label>
+                                <select id="inputChestPainType" name="ChestPainType" class="hidden-native-select"
+                                    required>
+                                    <option value="ASY" selected>ASY</option>
+                                    <option value="NAP">NAP</option>
+                                    <option value="ATA">ATA</option>
+                                    <option value="TA">TA</option>
+                                </select>
+
+                                <div class="chest-cards-grid" id="chestPainCardGrid" role="radiogroup" aria-label="Chest Pain Type (Angina Sensation)">
+                                    <div class="chest-card active" data-val="ASY" data-type="ASY" role="radio" aria-checked="true" tabindex="0">
+                                        <div class="chest-card-top">
+                                            <span class="chest-card-badge asy-badge">Silent</span>
+                                            <span class="chest-card-abbr">ASY</span>
+                                        </div>
+                                        <div class="chest-card-title">Asymptomatic</div>
+                                        <div class="chest-card-desc">No reported chest pain or discomfort.
+                                        </div>
+                                    </div>
+
+                                    <div class="chest-card" data-val="NAP" data-type="NAP" role="radio" aria-checked="false" tabindex="-1">
+                                        <div class="chest-card-top">
+                                            <span class="chest-card-badge nap-badge">Atypical</span>
+                                            <span class="chest-card-abbr">NAP</span>
+                                        </div>
+                                        <div class="chest-card-title">Non-Anginal Pain</div>
+                                        <div class="chest-card-desc">Sharp or stabbing non-cardiac discomfort.</div>
+                                    </div>
+
+                                    <div class="chest-card" data-val="ATA" data-type="ATA" role="radio" aria-checked="false" tabindex="-1">
+                                        <div class="chest-card-top">
+                                            <span class="chest-card-badge ata-badge">Substernal</span>
+                                            <span class="chest-card-abbr">ATA</span>
+                                        </div>
+                                        <div class="chest-card-title">Atypical Angina</div>
+                                        <div class="chest-card-desc">Mild pressure, atypical radiation pattern.</div>
+                                    </div>
+
+                                    <div class="chest-card" data-val="TA" data-type="TA" role="radio" aria-checked="false" tabindex="-1">
+                                        <div class="chest-card-top">
+                                            <span class="chest-card-badge ta-badge">Classic</span>
+                                            <span class="chest-card-abbr">TA</span>
+                                        </div>
+                                        <div class="chest-card-title">Typical Angina</div>
+                                        <div class="chest-card-desc">Substernal squeezing or heavy chest constriction.
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="field-error" id="error-ChestPainType"></span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- CLINICAL LABORATORY & ECG SECTION (Major Mode Only) -->
+                    <div class="form-section major-only-section" id="majorOnlySection">
+                        <div class="section-badge section-badge-clinical">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                            </svg>
+                            Section 2: Clinical Measurements & Electrocardiogram
+                        </div>
+
+                        <div class="form-grid">
+
+                            <!-- Cholesterol -->
+                            <div class="form-group" id="group-Cholesterol">
+                                <label for="inputCholesterol">
+                                    Serum Cholesterol <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Serum Cholesterol"
+                                        data-tip="Total serum cholesterol measured in mg/dL. If unmeasured, leave empty or enter 0 for median imputation."
+                                        data-range="Permissible range: 0 – 800 mg/dL (or 0 if unmeasured).">i</button>
+                                </label>
+                                <div class="input-with-affix">
+                                    <input type="number" id="inputCholesterol" name="Cholesterol" min="0" max="800"
+                                        placeholder="e.g. 235">
+                                    <span class="affix">mg/dL</span>
+                                </div>
+                                <span class="field-error" id="error-Cholesterol"></span>
+                                <span class="field-hint">Range: 0 – 800 mg/dL (leave empty or enter 0 if unmeasured)</span>
+                            </div>
+
+                            <!-- FastingBS -->
+                            <div class="form-group" id="group-FastingBS">
+                                <label for="inputFastingBS">
+                                    Fasting Blood Sugar > 120 mg/dL <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Fasting Blood Sugar"
+                                        data-tip="Fasting blood glucose level measured after an overnight fast."
+                                        data-range="Normal (&le; 120 mg/dL) or Elevated (&gt; 120 mg/dL).">i</button>
+                                </label>
+                                <select id="inputFastingBS" name="FastingBS">
+                                    <option value="" disabled selected>Select fasting BS level...</option>
+                                    <option value="0">Normal (Fasting Blood Sugar &le; 120 mg/dL)</option>
+                                    <option value="1">Elevated (Fasting Blood Sugar &gt; 120 mg/dL)</option>
+                                </select>
+                                <span class="field-error" id="error-FastingBS"></span>
+                            </div>
+
+                            <!-- RestingECG -->
+                            <div class="form-group" id="group-RestingECG">
+                                <label for="inputRestingECG">
+                                    Resting Electrocardiogram (ECG) <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Resting Electrocardiogram (ECG)"
+                                        data-tip="Resting ECG pattern: Normal (normal resting ECG pattern), ST (ST-T wave abnormality observed on an ECG), or LVH (left ventricular hypertrophy, meaning thickening of the heart's main pumping chamber)."
+                                        data-range="Select Normal, ST, or LVH.">i</button>
+                                </label>
+                                <select id="inputRestingECG" name="RestingECG">
+                                    <option value="" disabled selected>Select ECG finding...</option>
+                                    <option value="Normal">Normal: Normal resting ECG pattern</option>
+                                    <option value="ST">ST: ST-T wave abnormality observed on an ECG</option>
+                                    <option value="LVH">LVH: Left ventricular hypertrophy, meaning thickening of the heart's main pumping chamber</option>
+                                </select>
+                                <span class="field-error" id="error-RestingECG"></span>
+                            </div>
+
+                            <!-- Oldpeak -->
+                            <div class="form-group" id="group-Oldpeak">
+                                <label for="inputOldpeak">
+                                    Oldpeak (ST Depression) <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Oldpeak (ST Depression)"
+                                        data-tip="ST segment depression relative to rest measured during exercise stress testing, in millimeters (mm)."
+                                        data-range="Permissible range: -2.6 to 6.2 mm.">i</button>
+                                </label>
+                                <div class="input-with-affix">
+                                    <input type="number" step="0.1" id="inputOldpeak" name="Oldpeak" min="-2.6"
+                                        max="7.0" placeholder="e.g. 1.5">
+                                    <span class="affix">mm</span>
+                                </div>
+                                <span class="field-error" id="error-Oldpeak"></span>
+                                <span class="field-hint">Accepted input range for this assessment: -2.6 to 6.2 mm.</span>
+                            </div>
+
+                            <!-- ST_Slope -->
+                            <div class="form-group" id="group-ST_Slope">
+                                <label for="inputST_Slope">
+                                    Peak Exercise ST Segment Slope <span class="required">*</span>
+                                    <button type="button" class="info-tooltip-btn"
+                                        data-title="Peak Exercise ST Segment Slope"
+                                        data-tip="The slope of the ST segment at peak exercise: Upsloping (the ST segment rises after the J-point), Flat (the ST segment remains relatively horizontal), or Downsloping (the ST segment slopes downward)."
+                                        data-range="Select Upsloping, Flat, or Downsloping.">i</button>
+                                </label>
+                                <select id="inputST_Slope" name="ST_Slope">
+                                    <option value="" disabled selected>Select ST slope...</option>
+                                    <option value="Up">Upsloping: The ST segment rises after the J-point</option>
+                                    <option value="Flat">Flat: The ST segment remains relatively horizontal</option>
+                                    <option value="Down">Downsloping: The ST segment slopes downward</option>
+                                </select>
+                                <span class="field-error" id="error-ST_Slope"></span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    </div> <!-- /#majorFieldsContainer -->
+
+                    <!-- MINOR FIELDS CONTAINER (Minor Assessment Mode: 11 Features) -->
+                    <div id="minorFieldsContainer">
+
+                        <!-- Section 1: Biometrics & Demographics -->
+                        <div class="form-section">
+                            <div class="section-badge">Section 1: Physical Measurements &amp; Demographics</div>
+                            <div class="form-grid">
+
+                                <!-- age -->
+                                <div class="form-group" id="group-age">
+                                    <label for="inputMinorAge">
+                                        Age (Years) <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Age"
+                                            data-tip="Your current age in completed years. Enter a whole number between 18 and 100."
+                                            data-range="Accepted range: 18 – 100 years.">i</button>
+                                    </label>
+                                    <div class="input-with-affix">
+                                        <input type="number" id="inputMinorAge" name="age" min="18" max="100" placeholder="e.g. 52">
+                                        <span class="affix">yrs</span>
+                                    </div>
+                                    <span class="field-error" id="error-age"></span>
+                                </div>
+
+                                <!-- gender -->
+                                <div class="form-group" id="group-gender">
+                                    <label for="inputMinorGender">
+                                        Biological Sex <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Biological Sex"
+                                            data-tip="Biological sex assigned at birth. Select Female or Male from the dropdown options."
+                                            data-range="Select Female or Male.">i</button>
+                                    </label>
+                                    <select id="inputMinorGender" name="gender">
+                                        <option value="" disabled selected>Select sex...</option>
+                                        <option value="1">Female</option>
+                                        <option value="2">Male</option>
+                                    </select>
+                                    <span class="field-error" id="error-gender"></span>
+                                </div>
+
+                                <!-- height -->
+                                <div class="form-group" id="group-height">
+                                    <label for="inputMinorHeight">
+                                        Height <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Standing Height"
+                                            data-tip="Your standing height measured in centimetres (cm) without shoes. For example, 5 feet 7 inches is approximately 170 cm."
+                                            data-range="Accepted range: 100 – 250 cm.">i</button>
+                                    </label>
+                                    <div class="input-with-affix">
+                                        <input type="number" id="inputMinorHeight" name="height" min="100" max="250" placeholder="e.g. 168">
+                                        <span class="affix">cm</span>
+                                    </div>
+                                    <span class="field-error" id="error-height"></span>
+                                </div>
+
+                                <!-- weight -->
+                                <div class="form-group" id="group-weight">
+                                    <label for="inputMinorWeight">
+                                        Body Weight <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Body Weight"
+                                            data-tip="Your current body weight measured in kilograms (kg). For example, 154 pounds is approximately 70 kg."
+                                            data-range="Accepted range: 30 – 300 kg.">i</button>
+                                    </label>
+                                    <div class="input-with-affix">
+                                        <input type="number" step="0.1" id="inputMinorWeight" name="weight" min="30" max="300" placeholder="e.g. 75.0">
+                                        <span class="affix">kg</span>
+                                    </div>
+                                    <span class="field-error" id="error-weight"></span>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Blood Pressure & Metabolic Markers -->
+                        <div class="form-section">
+                            <div class="section-badge section-badge-clinical">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                                Section 2: Hemodynamics &amp; Metabolic Indicators
+                            </div>
+                            <div class="form-grid">
+
+                                <!-- ap_hi -->
+                                <div class="form-group" id="group-ap_hi">
+                                    <label for="inputMinorApHi">
+                                        Systolic Blood Pressure <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Systolic Blood Pressure"
+                                            data-tip="The upper (first) number on a blood pressure reading, measured in mm Hg. This must be higher than your diastolic pressure."
+                                            data-range="Accepted range: 50 – 260 mm Hg.">i</button>
+                                    </label>
+                                    <div class="input-with-affix">
+                                        <input type="number" id="inputMinorApHi" name="ap_hi" min="50" max="260" placeholder="e.g. 130">
+                                        <span class="affix">mm Hg</span>
+                                    </div>
+                                    <span class="field-error" id="error-ap_hi"></span>
+                                </div>
+
+                                <!-- ap_lo -->
+                                <div class="form-group" id="group-ap_lo">
+                                    <label for="inputMinorApLo">
+                                        Diastolic Blood Pressure <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Diastolic Blood Pressure"
+                                            data-tip="The lower (second) number on a blood pressure reading, measured in mm Hg. This must be lower than your systolic pressure."
+                                            data-range="Accepted range: 30 – 180 mm Hg.">i</button>
+                                    </label>
+                                    <div class="input-with-affix">
+                                        <input type="number" id="inputMinorApLo" name="ap_lo" min="30" max="180" placeholder="e.g. 85">
+                                        <span class="affix">mm Hg</span>
+                                    </div>
+                                    <span class="field-error" id="error-ap_lo"></span>
+                                </div>
+
+                                <!-- cholesterol -->
+                                <div class="form-group" id="group-cholesterol">
+                                    <label for="inputMinorCholesterol">
+                                        Cholesterol Category <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Cholesterol Category"
+                                            data-tip="Your total serum cholesterol level from a standard blood lipid test. Select Normal (&lt; 200 mg/dL), Above Normal (200 – 239 mg/dL), or Well Above Normal (&ge; 240 mg/dL)."
+                                            data-range="Normal (&lt; 200 mg/dL), Above Normal (200 – 239 mg/dL), or Well Above Normal (&ge; 240 mg/dL).">i</button>
+                                    </label>
+                                    <select id="inputMinorCholesterol" name="cholesterol">
+                                        <option value="" disabled selected>Select cholesterol tier...</option>
+                                        <option value="1">Normal (&lt; 200 mg/dL)</option>
+                                        <option value="2">Above Normal (200 - 239 mg/dL)</option>
+                                        <option value="3">Well Above Normal (&ge; 240 mg/dL)</option>
+                                    </select>
+                                    <span class="field-error" id="error-cholesterol"></span>
+                                </div>
+
+                                <!-- gluc -->
+                                <div class="form-group" id="group-gluc">
+                                    <label for="inputMinorGluc">
+                                        Glucose Category <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Glucose Category"
+                                            data-tip="Your fasting blood glucose level from a standard blood test. Select Normal (&lt; 100 mg/dL), Above Normal (100 – 125 mg/dL), or Well Above Normal (&ge; 126 mg/dL)."
+                                            data-range="Normal (&lt; 100 mg/dL), Above Normal (100 – 125 mg/dL), or Well Above Normal (&ge; 126 mg/dL).">i</button>
+                                    </label>
+                                    <select id="inputMinorGluc" name="gluc">
+                                        <option value="" disabled selected>Select glucose tier...</option>
+                                        <option value="1">Normal (&lt; 100 mg/dL)</option>
+                                        <option value="2">Above Normal (100 - 125 mg/dL)</option>
+                                        <option value="3">Well Above Normal (&ge; 126 mg/dL)</option>
+                                    </select>
+                                    <span class="field-error" id="error-gluc"></span>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Lifestyle & Behavioral Parameters -->
+                        <div class="form-section">
+                            <div class="section-badge">Section 3: Lifestyle &amp; Behavioral Factors</div>
+                            <div class="form-grid">
+
+                                <!-- smoke -->
+                                <div class="form-group" id="group-smoke">
+                                    <label for="inputMinorSmoke">
+                                        Smoking Status <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Smoking Status"
+                                            data-tip="Current smoking status. Select 'Smoker' if you smoke cigarettes or tobacco products regularly, or 'Non-smoker' if you do not smoke."
+                                            data-range="Select Non-smoker or Smoker.">i</button>
+                                    </label>
+                                    <select id="inputMinorSmoke" name="smoke">
+                                        <option value="" disabled selected>Select smoking status...</option>
+                                        <option value="0">Non-smoker</option>
+                                        <option value="1">Smoker</option>
+                                    </select>
+                                    <span class="field-error" id="error-smoke"></span>
+                                </div>
+
+                                <!-- alco -->
+                                <div class="form-group" id="group-alco">
+                                    <label for="inputMinorAlco">
+                                        Alcohol Consumption <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Alcohol Intake"
+                                            data-tip="Regular alcohol consumption. Select 'Regular Alcohol Intake' if you consume alcoholic beverages regularly each week, or 'No or Minimal Alcohol' if you rarely or never drink."
+                                            data-range="Select No or Minimal Alcohol, or Regular Alcohol Intake.">i</button>
+                                    </label>
+                                    <select id="inputMinorAlco" name="alco">
+                                        <option value="" disabled selected>Select alcohol intake...</option>
+                                        <option value="0">No or Minimal Alcohol</option>
+                                        <option value="1">Regular Alcohol Intake</option>
+                                    </select>
+                                    <span class="field-error" id="error-alco"></span>
+                                </div>
+
+                                <!-- active -->
+                                <div class="form-group" id="group-active">
+                                    <label for="inputMinorActive">
+                                        Physical Activity <span class="required">*</span>
+                                        <button type="button" class="info-tooltip-btn"
+                                            data-title="Physical Activity"
+                                            data-tip="Weekly physical activity level. Select 'Regularly Active' if you engage in regular physical exercise or physical work (e.g. 30+ minutes most days), or 'Sedentary / Inactive' if your routine has little to no structured physical exercise."
+                                            data-range="Select Sedentary / Inactive or Regularly Active.">i</button>
+                                    </label>
+                                    <select id="inputMinorActive" name="active">
+                                        <option value="" disabled selected>Select physical activity...</option>
+                                        <option value="0">Sedentary / Inactive</option>
+                                        <option value="1">Regularly Active</option>
+                                    </select>
+                                    <span class="field-error" id="error-active"></span>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div> <!-- /#minorFieldsContainer -->
+
+                    <!-- Action Buttons Bar -->
+                    <div class="form-actions">
+                        <div class="action-info">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
+                            <span>Inputs are processed by the remote backend in-memory without persistent storage.</span>
+                        </div>
+                        <div class="button-group">
+                            <button type="button" class="btn btn-secondary" id="resetBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                                    <path d="M3 3v5h5" />
+                                </svg>
+                                Reset Form
+                            </button>
+                            <button type="button" class="btn btn-outline" id="loadSampleBtn">
+                                Sample Data
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="predictBtn">
+                                <span class="btn-text">Run Risk Estimation</span>
+                                <div class="spinner hidden" id="predictSpinner"></div>
+                                <svg class="btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                    <polyline points="12 5 19 12 12 19" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+        <!-- PREDICTION RESULTS MODAL / SECTION (FR-12 to FR-18) -->
+        <div class="results-container hidden" id="resultsContainer">
+            <div class="results-card">
+
+                <div class="results-header">
+                    <div class="results-title-group">
+                        <span class="results-badge" id="resultModeBadge">Extended Clinical Assessment</span>
+                        <h3 class="results-title">Estimation Analysis Report</h3>
+                        <p class="results-timestamp" id="resultTimestamp">Generated: Just now</p>
+                    </div>
+                    <button class="close-results-btn" id="closeResultsTopBtn" aria-label="Dismiss">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="results-body">
+
+                    <!-- Primary Outcome Grid -->
+                    <div class="outcome-grid" id="outcomeGrid">
+
+                        <!-- Predicted Status Card (FR-13 & 10.1) -->
+                        <div class="outcome-card status-card" id="statusCard">
+                            <div class="card-subtitle">Predicted Classification Target</div>
+                            <div class="status-indicator-box" id="statusIndicatorBox">
+                                <div class="status-icon-wrapper" id="statusIcon">
+                                    <!-- Injected via JS -->
+                                </div>
+                                <div class="status-text-wrapper">
+                                    <div class="status-headline" id="statusHeadline">Heart Disease Risk Detected</div>
+                                    <div class="status-subtext" id="statusSubtext">Model predicts heart-disease status
+                                        as POSITIVE (Class
+                                        1)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Feature 3: Radar Chart / Health Measurements -->
+                    <div class="result-section radar-section" id="radarSection">
+                        <h4 class="result-section-heading">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                            <span id="radarHeadingText">Your Health Measurements</span>
+                        </h4>
+                        <p class="section-instruction" id="radarSectionInstruction">
+                            A visual overview of the clinical measurements provided in your assessment.
+                        </p>
+
+                        <!-- Major Model 5-Axis Radar Layout -->
+                        <div class="radar-card-layout" id="radarCardLayoutMajor">
+                            <div class="radar-chart-container">
+                                <svg id="majorRadarSvg" viewBox="0 0 340 340" class="radar-svg">
+                                    <defs>
+                                        <linearGradient id="majorRadarAreaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="rgba(244, 63, 94, 0.55)" />
+                                            <stop offset="100%" stop-color="rgba(225, 29, 72, 0.15)" />
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- Background Concentric Pentagons (Gridlines: 100%, 80%, 60%, 40%, 20%) -->
+                                    <polygon points="170.0,60.0 274.6,136.0 234.7,259.0 105.3,259.0 65.4,136.0"
+                                        class="radar-grid-ring ring-100" />
+                                    <polygon points="170.0,82.0 253.7,142.8 221.7,241.2 118.3,241.2 86.3,142.8"
+                                        class="radar-grid-ring ring-80" />
+                                    <polygon points="170.0,104.0 232.8,149.6 208.8,223.4 131.2,223.4 107.2,149.6"
+                                        class="radar-grid-ring ring-60" />
+                                    <polygon points="170.0,126.0 211.8,156.4 195.9,205.6 144.1,205.6 128.2,156.4"
+                                        class="radar-grid-ring ring-40" />
+                                    <polygon points="170.0,148.0 190.9,163.2 182.9,187.8 157.1,187.8 149.1,163.2"
+                                        class="radar-grid-ring ring-20" />
+                                    <!-- Axis Radial Lines -->
+                                    <line x1="170" y1="170" x2="170" y2="60" class="radar-axis-line" />
+                                    <line x1="170" y1="170" x2="274.6" y2="136" class="radar-axis-line" />
+                                    <line id="majorAxisLineChol" x1="170" y1="170" x2="234.7" y2="259" class="radar-axis-line" />
+                                    <line x1="170" y1="170" x2="105.3" y2="259" class="radar-axis-line" />
+                                    <line x1="170" y1="170" x2="65.4" y2="136" class="radar-axis-line" />
+                                    <!-- Dynamic Measurement Polygon / Path -->
+                                    <path id="majorRadarPolygon" class="radar-polygon major-polygon"
+                                        d="M 170,170 L 170,170 L 170,170 L 170,170 L 170,170 Z" />
+                                    <!-- Vertex Points -->
+                                    <circle id="majorDotAge" class="radar-vertex-dot major-dot" cx="170" cy="170" r="4" />
+                                    <circle id="majorDotRestingBP" class="radar-vertex-dot major-dot" cx="170" cy="170" r="4" />
+                                    <circle id="majorDotChol" class="radar-vertex-dot major-dot" cx="170" cy="170" r="4" />
+                                    <circle id="majorDotMaxHR" class="radar-vertex-dot major-dot" cx="170" cy="170" r="4" />
+                                    <circle id="majorDotOldpeak" class="radar-vertex-dot major-dot" cx="170" cy="170" r="4" />
+                                    <!-- Axis Labels -->
+                                    <text x="170" y="44" text-anchor="middle" class="radar-axis-text">Age</text>
+                                    <text x="286" y="136" text-anchor="start" class="radar-axis-text">Resting BP</text>
+                                    <text id="majorAxisLabelChol" x="244" y="276" text-anchor="middle" class="radar-axis-text">Cholesterol</text>
+                                    <text x="96" y="276" text-anchor="middle" class="radar-axis-text">Max HR</text>
+                                    <text x="54" y="136" text-anchor="end" class="radar-axis-text">Oldpeak</text>
+                                </svg>
+                            </div>
+
+                            <!-- Major Radar Metrics Legend -->
+                            <div class="radar-legend-panel">
+                                <div class="radar-metric-item">
+                                    <div class="radar-metric-dot age-dot"></div>
+                                    <div class="radar-metric-info">
+                                        <span class="radar-metric-title">Age</span>
+                                        <span class="radar-metric-val" id="majorRadarValAge">-- yrs</span>
+                                        <span class="radar-metric-ref">Ref: 37.0 – 68.0 yrs</span>
+                                    </div>
+                                </div>
+                                <div class="radar-metric-item">
+                                    <div class="radar-metric-dot rbp-dot"></div>
+                                    <div class="radar-metric-info">
+                                        <span class="radar-metric-title">Resting Blood Pressure</span>
+                                        <span class="radar-metric-val" id="majorRadarValRestingBP">-- mmHg</span>
+                                        <span class="radar-metric-ref">Ref: 107.6 – 160.0 mmHg</span>
+                                    </div>
+                                </div>
+                                <div class="radar-metric-item">
+                                    <div class="radar-metric-dot chol-dot"></div>
+                                    <div class="radar-metric-info">
+                                        <span class="radar-metric-title">Serum Cholesterol</span>
+                                        <span class="radar-metric-val" id="majorRadarValChol">-- mg/dL</span>
+                                        <span class="radar-metric-ref" id="majorRadarRefChol">Ref: 165.2 – 339.8 mg/dL</span>
+                                    </div>
+                                </div>
+                                <div class="radar-metric-item">
+                                    <div class="radar-metric-dot hr-dot"></div>
+                                    <div class="radar-metric-info">
+                                        <span class="radar-metric-title">Maximum Heart Rate (MaxHR)</span>
+                                        <span class="radar-metric-val" id="majorRadarValMaxHR">-- bpm</span>
+                                        <span class="radar-metric-ref">Ref: 96.0 – 178.0 bpm</span>
+                                    </div>
+                                </div>
+                                <div class="radar-metric-item">
+                                    <div class="radar-metric-dot oldpeak-dot"></div>
+                                    <div class="radar-metric-info">
+                                        <span class="radar-metric-title">ST Depression (Oldpeak)</span>
+                                        <span class="radar-metric-val" id="majorRadarValOldpeak">-- mm</span>
+                                        <span class="radar-metric-ref">Ref: 0.0 – 3.0 mm (values &le; 0 mm plotted at centre)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categorical & Clinical Grid for Major Assessment -->
+                        <div class="major-clinical-section" id="majorClinicalSection">
+                            <h5 class="minor-lifestyle-heading">Clinical & Electrocardiographic Indicators</h5>
+                            <div class="major-clinical-grid">
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Biological Sex</span>
+                                    <span class="lifestyle-value" id="majorValSex">--</span>
+                                </div>
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Chest Pain Type</span>
+                                    <span class="lifestyle-value" id="majorValChestPainType">--</span>
+                                </div>
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Fasting Blood Sugar</span>
+                                    <span class="lifestyle-value" id="majorValFastingBS">--</span>
+                                </div>
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Resting ECG</span>
+                                    <span class="lifestyle-value" id="majorValRestingECG">--</span>
+                                </div>
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Exercise Angina</span>
+                                    <span class="lifestyle-value" id="majorValExerciseAngina">--</span>
+                                </div>
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">ST Slope</span>
+                                    <span class="lifestyle-value" id="majorValSTSlope">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Explanatory Note for Major Health Measurements -->
+                        <div class="minor-chart-explanation-box" id="majorChartExplanationBox">
+                            <div class="minor-chart-explanation-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                            </div>
+                            <div class="minor-chart-explanation-content">
+                                <p class="minor-chart-explanation-text">
+                                    The chart visualizes your submitted clinical measurements relative to reference ranges from the Major Assessment training dataset. It does not represent medical risk, clinical thresholds, or the contribution of individual features to the model's prediction.
+                                </p>
+                                <p class="minor-chart-explanation-subtext" id="majorOldpeakBoundaryNote">
+                                    Measurements at or below the displayed lower reference boundary (such as negative Oldpeak values) are plotted at the lower boundary (chart centre). A centre plot position reflects a value &le; 0.0 mm and does not necessarily mean the submitted measurement was zero. Refer to the legend for the exact submitted value.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Minor Model 4-Axis Health Measurements Layout -->
+                        <div class="radar-card-layout hidden" id="radarCardLayoutMinor">
+                            <div class="radar-chart-container">
+                                <svg id="minorRadarSvg" viewBox="0 0 340 340" class="radar-svg">
+                                    <defs>
+                                        <linearGradient id="minorRadarAreaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="rgba(14, 165, 233, 0.55)" />
+                                            <stop offset="100%" stop-color="rgba(56, 189, 248, 0.15)" />
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- Background Concentric Diamonds (Gridlines) -->
+                                    <polygon points="170,60 280,170 170,280 60,170" class="radar-grid-ring ring-100" />
+                                    <polygon points="170,82 258,170 170,258 82,170" class="radar-grid-ring ring-80" />
+                                    <polygon points="170,104 236,170 170,236 104,170" class="radar-grid-ring ring-60" />
+                                    <polygon points="170,126 214,170 170,214 126,170" class="radar-grid-ring ring-40" />
+                                    <polygon points="170,148 192,170 170,192 148,170" class="radar-grid-ring ring-20" />
+                                    <!-- Axis Radial Lines -->
+                                    <line x1="170" y1="170" x2="170" y2="60" class="radar-axis-line" />
+                                    <line x1="170" y1="170" x2="280" y2="170" class="radar-axis-line" />
+                                    <line x1="170" y1="170" x2="170" y2="280" class="radar-axis-line" />
+                                    <line x1="170" y1="170" x2="60" y2="170" class="radar-axis-line" />
+                                    <!-- Dynamic Measurement Polygon -->
+                                    <polygon id="minorRadarPolygon" class="radar-polygon minor-polygon"
+                                        points="170,170 170,170 170,170 170,170" />
+                                    <!-- Vertex Points -->
+                                    <circle id="minorDotAge" class="radar-vertex-dot" cx="170" cy="170" r="4" />
+                                    <circle id="minorDotBMI" class="radar-vertex-dot" cx="170" cy="170" r="4" />
+                                    <circle id="minorDotSys" class="radar-vertex-dot" cx="170" cy="170" r="4" />
+                                    <circle id="minorDotDia" class="radar-vertex-dot" cx="170" cy="170" r="4" />
+                                    <!-- Axis Labels -->
+                                    <text x="170" y="44" text-anchor="middle" class="radar-axis-text">Age</text>
+                                    <text x="294" y="174" text-anchor="start" class="radar-axis-text">BMI</text>
+                                    <text x="170" y="302" text-anchor="middle" class="radar-axis-text">Systolic BP</text>
+                                    <text x="46" y="174" text-anchor="end" class="radar-axis-text">Diastolic BP</text>
+                                </svg>
+                            </div>
+
+                            <!-- Minor Radar Metrics Legend -->
+                            <div class="radar-legend-panel">
+                                <div class="radar-metric-item">
+                                    <div class="radar-metric-dot age-dot"></div>
+                                    <div class="radar-metric-info">
+                                        <span class="radar-metric-title">Age</span>
+                                        <span class="radar-metric-val" id="minorRadarValAge">-- yrs</span>
+                                        <span class="radar-metric-ref">Ref: 41.2 – 63.7 yrs</span>
+                                    </div>
+                                </div>
+                                <div class="radar-metric-item">
+                                    <div class="radar-metric-dot bmi-dot"></div>
+                                    <div class="radar-metric-info">
+                                        <span class="radar-metric-title">Body Mass Index (BMI)</span>
+                                        <span class="radar-metric-val" id="minorRadarValBMI">-- kg/m²</span>
+                                        <span class="radar-metric-ref">Ref: 20.9 – 37.3 kg/m²</span>
+                                    </div>
+                                </div>
+                                <div class="radar-metric-item">
+                                    <div class="radar-metric-dot sys-dot"></div>
+                                    <div class="radar-metric-info">
+                                        <span class="radar-metric-title">Systolic Blood Pressure</span>
+                                        <span class="radar-metric-val" id="minorRadarValSysBP">-- mmHg</span>
+                                        <span class="radar-metric-ref">Ref: 100.0 – 160.0 mmHg</span>
+                                    </div>
+                                </div>
+                                <div class="radar-metric-item">
+                                    <div class="radar-metric-dot dia-dot"></div>
+                                    <div class="radar-metric-info">
+                                        <span class="radar-metric-title">Diastolic Blood Pressure</span>
+                                        <span class="radar-metric-val" id="minorRadarValDiaBP">-- mmHg</span>
+                                        <span class="radar-metric-ref">Ref: 70.0 – 100.0 mmHg</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categorical & Lifestyle Grid for Minor Assessment -->
+                        <div class="minor-lifestyle-section hidden" id="minorLifestyleSection">
+                            <h5 class="minor-lifestyle-heading">Lifestyle & Additional Indicators</h5>
+                            <div class="minor-lifestyle-grid">
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Cholesterol</span>
+                                    <span class="lifestyle-value" id="minorValCholesterol">--</span>
+                                </div>
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Glucose</span>
+                                    <span class="lifestyle-value" id="minorValGlucose">--</span>
+                                </div>
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Smoking</span>
+                                    <span class="lifestyle-value" id="minorValSmoke">--</span>
+                                </div>
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Alcohol Intake</span>
+                                    <span class="lifestyle-value" id="minorValAlco">--</span>
+                                </div>
+                                <div class="lifestyle-card">
+                                    <span class="lifestyle-label">Physical Activity</span>
+                                    <span class="lifestyle-value" id="minorValActive">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Explanatory Note for Minor Health Measurements -->
+                        <div class="minor-chart-explanation-box hidden" id="minorChartExplanationBox">
+                            <div class="minor-chart-explanation-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                            </div>
+                            <p class="minor-chart-explanation-text">
+                                The chart visualizes your submitted measurements relative to reference ranges from the Minor Assessment training dataset. It does not represent medical risk, clinical thresholds, or the contribution of individual features to the model's prediction.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Mandatory Medical Disclaimer (FR-17 & 10.5) -->
+                    <div class="medical-disclaimer-box">
+                        <div class="disclaimer-header">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            <span>Mandatory Medical & Academic Disclaimer</span>
+                        </div>
+                        <div class="disclaimer-body">
+                            <ul>
+                                <li><strong>Educational & Research Prototype:</strong> This software is an experimental
+                                    machine-learning
+                                    prototype developed strictly for educational, research and demonstration purposes.
+                                </li>
+                                <li><strong>Not a Diagnostic Device:</strong> The output does <em>not</em> constitute
+                                    clinical medical
+                                    advice, formal cardiovascular risk estimation, or medical diagnosis.</li>
+                                <li><strong>No Negative Guarantee:</strong> A negative classification does not guarantee
+                                    the absence of
+                                    coronary artery disease, heart disease, or related cardiac conditions.</li>
+                                <li><strong>Consult Medical Professionals:</strong> If you or anyone you know experience
+                                    chest pain,
+                                    shortness of breath, dizziness, or irregular heartbeat, seek immediate emergency
+                                    medical evaluation
+                                    from qualified healthcare providers.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Results Footer -->
+                <div class="results-footer">
+                    <button class="btn btn-secondary" id="performAnotherAssessmentBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        Perform Another Assessment
+                    </button>
+                    <button class="btn btn-outline" id="printReportBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="6 9 6 2 18 2 18 9" />
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                            <rect x="6" y="14" width="12" height="8" />
+                        </svg>
+                        Save / Print Summary
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Medical Glossary Modal (FR-06) -->
+    <div class="modal-backdrop hidden" id="glossaryModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Clinical Medical Terms Reference</h3>
+                <button class="modal-close-btn" id="closeGlossaryBtn">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="glossary-grid">
+                    <div class="glossary-item">
+                        <h4>RestingBP (Resting Blood Pressure)</h4>
+                        <p>Resting systemic systolic blood pressure measured in millimetres of mercury (mm Hg) while
+                            relaxed. High
+                            blood pressure (>130 mm Hg) stresses arterial walls and heart muscle.</p>
+                    </div>
+                    <div class="glossary-item">
+                        <h4>Serum Cholesterol</h4>
+                        <p>Total amount of cholesterol found in blood, measured in mg/dL. Elevated cholesterol (>200
+                            mg/dL)
+                            contributes to atheroma plaque buildup inside coronary arteries.</p>
+                    </div>
+                    <div class="glossary-item">
+                        <h4>ChestPainType (Angina Types)</h4>
+                        <p><strong>TA:</strong> Typical Angina (tightness/pressure behind breastbone upon exertion).<br>
+                            <strong>ATA:</strong> Atypical Angina (unusual presentation).<br>
+                            <strong>NAP:</strong> Non-Anginal Pain (musculoskeletal or gastrointestinal).<br>
+                            <strong>ASY:</strong> Asymptomatic (no notable chest pain).
+                        </p>
+                    </div>
+                    <div class="glossary-item">
+                        <h4>Fasting Blood Sugar (FastingBS)</h4>
+                        <p>Blood glucose after an overnight fast. Values above 120 mg/dL indicate metabolic dysfunction
+                            or diabetes,
+                            a significant risk factor for cardiovascular disease.</p>
+                    </div>
+                    <div class="glossary-item">
+                        <h4>RestingECG (Electrocardiogram)</h4>
+                        <p>Graphic recording of electrical heart activity while resting. Notes resting patterns including normal resting ECG pattern, ST-T wave abnormality observed on an ECG, or left ventricular hypertrophy (LVH, meaning thickening of the heart's main pumping chamber).</p>
+                    </div>
+                    <div class="glossary-item">
+                        <h4>Oldpeak & ST Slope</h4>
+                        <p><strong>Oldpeak:</strong> ST segment depression measured relative to rest during maximal exercise stress test.<br>
+                            <strong>ST Slope:</strong> The slope of the ST segment at peak exercise: Upsloping (the ST segment rises after the J-point), Flat (the ST segment remains relatively horizontal), or Downsloping (the ST segment slopes downward).
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="dismissGlossaryBtn">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Body Mass Index (BMI) & Cardiac Workload Modal -->
+    <div class="modal-backdrop hidden" id="bmiModal">
+        <div class="modal-card bmi-modal-card">
+            <div class="modal-header">
+                <div class="bmi-modal-title-group">
+                    <span class="bmi-badge-tag">Educational Biometric Tool</span>
+                    <h3 class="modal-title">Body Mass Index (BMI) & Cardiac Workload</h3>
+                </div>
+                <button class="modal-close-btn" id="closeBmiBtn" aria-label="Close BMI Calculator">&times;</button>
+            </div>
+
+            <div class="modal-content">
+                <p class="modal-desc">
+                    Body Mass Index assesses weight relative to height, directly correlating with systemic vascular
+                    resistance,
+                    left ventricular afterload, and myocardial oxygen demand.
+                </p>
+
+                <!-- Metric / Imperial Unit Toggle -->
+                <div class="bmi-unit-toggle">
+                    <button type="button" class="bmi-unit-btn active" id="bmiUnitMetric" data-unit="metric">
+                        Metric (cm / kg)
+                    </button>
+                    <button type="button" class="bmi-unit-btn" id="bmiUnitImperial" data-unit="imperial">
+                        Imperial (ft-in / lbs)
+                    </button>
+                </div>
+
+                <!-- Metric Inputs Section -->
+                <div class="bmi-inputs-container" id="bmiMetricGroup">
+                    <div class="bmi-input-row">
+                        <div class="form-group">
+                            <label for="bmiInputHeightCm">Height</label>
+                            <div class="input-with-affix">
+                                <input type="number" id="bmiInputHeightCm" min="100" max="240" value="175"
+                                    placeholder="175">
+                                <span class="affix">cm</span>
+                            </div>
+                            <input type="range" class="apple-slider" id="bmiSliderHeightCm" min="120" max="220"
+                                value="175" step="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bmiInputWeightKg">Weight</label>
+                            <div class="input-with-affix">
+                                <input type="number" id="bmiInputWeightKg" min="30" max="250" value="72"
+                                    placeholder="72">
+                                <span class="affix">kg</span>
+                            </div>
+                            <input type="range" class="apple-slider" id="bmiSliderWeightKg" min="40" max="160"
+                                value="72" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Imperial Inputs Section (Hidden by default) -->
+                <div class="bmi-inputs-container hidden" id="bmiImperialGroup">
+                    <div class="bmi-input-row">
+                        <div class="form-group">
+                            <label>Height (Feet & Inches)</label>
+                            <div class="bmi-ft-in-flex">
+                                <div class="input-with-affix">
+                                    <input type="number" id="bmiInputHeightFt" min="3" max="7" value="5"
+                                        placeholder="5">
+                                    <span class="affix">ft</span>
+                                </div>
+                                <div class="input-with-affix">
+                                    <input type="number" id="bmiInputHeightIn" min="0" max="11" value="9"
+                                        placeholder="9">
+                                    <span class="affix">in</span>
+                                </div>
+                            </div>
+                            <input type="range" class="apple-slider" id="bmiSliderHeightTotalIn" min="48" max="86"
+                                value="69" step="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bmiInputWeightLbs">Weight</label>
+                            <div class="input-with-affix">
+                                <input type="number" id="bmiInputWeightLbs" min="60" max="500" value="160"
+                                    placeholder="160">
+                                <span class="affix">lbs</span>
+                            </div>
+                            <input type="range" class="apple-slider" id="bmiSliderWeightLbs" min="80" max="350"
+                                value="160" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-Time BMI Score Display Panel -->
+                <div class="bmi-result-panel" id="bmiResultPanel">
+                    <div class="bmi-score-hero">
+                        <div class="bmi-score-circle" id="bmiScoreCircle">
+                            <span class="bmi-number" id="bmiNumberDisplay">23.5</span>
+                            <span class="bmi-caption">BMI kg/m²</span>
+                        </div>
+                        <div class="bmi-status-box">
+                            <span class="bmi-category-badge badge-normal" id="bmiCategoryBadge">Normal Weight
+                                (Optimal)</span>
+                            <p class="bmi-summary-text" id="bmiSummaryText">
+                                Optimal body mass index associated with minimal cardiovascular strain and lowest
+                                relative risk of
+                                hypertension.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Color Spectrum Meter Bar with Needle Indicator -->
+                    <div class="bmi-meter-wrapper">
+                        <div class="bmi-meter-track" id="bmiMeterTrack">
+                            <div class="bmi-meter-segment seg-under" title="Underweight (< 18.5)">
+                                <span class="seg-label">&lt;18.5</span>
+                            </div>
+                            <div class="bmi-meter-segment seg-normal" title="Normal (18.5 - 24.9)">
+                                <span class="seg-label">18.5-24.9</span>
+                            </div>
+                            <div class="bmi-meter-segment seg-over" title="Overweight (25.0 - 29.9)">
+                                <span class="seg-label">25-29.9</span>
+                            </div>
+                            <div class="bmi-meter-segment seg-obese1" title="Obese Class I (30.0 - 34.9)">
+                                <span class="seg-label">30-34.9</span>
+                            </div>
+                            <div class="bmi-meter-segment seg-obese2" title="Obese Class II+ (&ge; 35.0)">
+                                <span class="seg-label">&ge;35</span>
+                            </div>
+                            <!-- Moving Needle Indicator -->
+                            <div class="bmi-needle-indicator" id="bmiNeedleIndicator">
+                                <div class="needle-tip"></div>
+                                <div class="needle-line"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cardiovascular Hemodynamic Impact Box -->
+                    <div class="bmi-cardio-impact-box" id="bmiCardioImpactBox">
+                        <div class="impact-header">
+                            <svg class="impact-heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                            </svg>
+                            <span>Cardiovascular Hemodynamic Impact</span>
+                        </div>
+                        <p id="bmiCardioDesc">
+                            Normal body mass maintains balanced systemic vascular resistance, low left ventricular wall
+                            stress, and
+                            optimal myocardial oxygen balance.
+                        </p>
+                        <div class="ideal-weight-tag" id="bmiIdealWeightTag">
+                            <span>Standard Reference Range (BMI 18.5 – 24.9):</span>
+                            <strong id="bmiIdealRangeText">56.7 kg – 76.3 kg</strong>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="bmiResetBtn">Reset to Default</button>
+                <button type="button" class="btn btn-primary" id="bmiDismissBtn">Got It</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Biomarker Field Tooltip Popover -->
+    <div class="field-tooltip-popover hidden" id="fieldTooltipPopover" role="tooltip" aria-live="polite">
+        <div class="tooltip-header">
+            <span class="tooltip-title" id="tooltipPopoverTitle">Biomarker Information</span>
+            <button type="button" class="tooltip-close-btn" id="tooltipPopoverClose" aria-label="Close tooltip">&times;</button>
+        </div>
+        <p class="tooltip-desc" id="tooltipPopoverDesc"></p>
+        <div class="tooltip-range-box" id="tooltipPopoverRangeBox">
+            <span class="tooltip-range-icon">💡</span>
+            <span id="tooltipPopoverRange"></span>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast hidden" id="toastNotification">
+        <span id="toastMessage">Notification</span>
+    </div>
+
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <strong>Cardiovascular Machine Learning Risk Estimator</strong> &bull; Version 1.0
+            </div>
+            <div class="footer-note">
+                Strict Minimal-Data Privacy: In-memory evaluation only. No health inputs or prediction logs are
+                retained.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Formal Assessment Report Document (Native Print & PDF Generation) -->
+    <div id="printReportDocument" class="print-report-document" aria-hidden="true">
+        <!-- A. Report Header -->
+        <header class="print-header">
+            <div class="print-header-top">
+                <div class="print-brand-block">
+                    <div class="print-brand-name">CardioPredict ML</div>
+                    <div class="print-brand-tagline">Cardiovascular Health Assessment System</div>
+                </div>
+                <div class="print-meta-block">
+                    <div class="print-meta-row">
+                        <span class="print-meta-label">Report Date:</span>
+                        <span class="print-meta-value" id="printReportDate">--</span>
+                    </div>
+                    <div class="print-meta-row">
+                        <span class="print-meta-label">Report Time:</span>
+                        <span class="print-meta-value" id="printReportTime">--</span>
+                    </div>
+                    <div class="print-meta-row">
+                        <span class="print-meta-label">Assessment:</span>
+                        <span class="print-meta-value" id="printReportModeText">Extended Clinical Assessment</span>
+                    </div>
+                </div>
+            </div>
+            <div class="print-header-line"></div>
+            <div class="print-title-row">
+                <h1 class="print-document-title">Heart Health Assessment Report</h1>
+                <span class="print-mode-pill" id="printAssessmentPill">Extended Clinical Assessment</span>
+            </div>
+        </header>
+
+        <!-- B. Assessment Result -->
+        <section class="print-section print-result-section">
+            <div class="print-result-card status-negative" id="printResultCard">
+                <div class="print-result-badge-col">
+                    <div class="print-result-icon" id="printResultIcon">
+                        <!-- Injected SVG -->
+                    </div>
+                </div>
+                <div class="print-result-content-col">
+                    <div class="print-result-caption">Machine Learning Classification Target</div>
+                    <div class="print-result-headline" id="printResultHeadline">No Heart Disease Detected</div>
+                    <div class="print-result-subtext" id="printResultSubtext">
+                        The statistical classification model predicted a negative status based on the submitted feature inputs.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- C. Submitted Assessment Information -->
+        <section class="print-section print-inputs-section">
+            <h2 class="print-section-heading">Submitted Assessment Information</h2>
+            <div class="print-tables-row">
+                <!-- Quantitative Measurements Table -->
+                <div class="print-table-col">
+                    <div class="print-table-header" id="printMeasurementsHeader">Clinical Measurements</div>
+                    <table class="print-table" id="printMeasurementsTable">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Submitted Value</th>
+                                <th>Dataset Reference (P5–P95)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="printMeasurementsBody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                    <p class="print-table-note" id="printMeasurementsNote">Dataset reference ranges describe the distribution of measurements in the model's training data. They are not clinical reference intervals, healthy ranges, or medical recommendations.</p>
+                </div>
+
+                <!-- Categorical / Lifestyle Indicators Table -->
+                <div class="print-table-col">
+                    <div class="print-table-header" id="printIndicatorsHeader">Clinical &amp; Electrocardiographic Indicators</div>
+                    <table class="print-table" id="printIndicatorsTable">
+                        <thead>
+                            <tr>
+                                <th>Indicator</th>
+                                <th>Submitted Category</th>
+                            </tr>
+                        </thead>
+                        <tbody id="printIndicatorsBody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- D. Measurement Visualization -->
+        <section class="print-section print-viz-section">
+            <h2 class="print-section-heading">Measurement Profile &amp; Reference Boundaries</h2>
+            <div class="print-viz-card">
+                <div class="print-viz-chart-wrap" id="printVizChartWrap">
+                    <!-- Cloned/Rendered SVG -->
+                </div>
+                <div class="print-viz-legend-wrap" id="printVizLegendWrap">
+                    <!-- Reference Boundaries & Plotted Percentiles -->
+                </div>
+            </div>
+            <p class="print-viz-note" id="printVizNote">
+                The chart visualizes your submitted clinical measurements relative to reference ranges from the training dataset. Measurements at or below the lower reference boundary (such as negative Oldpeak values) are plotted at the centre (≤ 0.0 mm). Refer to the submitted values table for exact measurements.
+            </p>
+        </section>
+
+        <!-- E. Important Interpretation and Disclaimer -->
+        <section class="print-section print-disclaimer-section">
+            <h2 class="print-section-heading">Important Medical &amp; Academic Disclaimer</h2>
+            <div class="print-disclaimer-grid">
+                <div class="print-disclaimer-card">
+                    <div class="print-disclaimer-title">Model Classification</div>
+                    <p>This assessment represents a statistical classification generated by a machine-learning model from the submitted parameters. It reflects dataset training patterns rather than an individualized diagnostic assessment.</p>
+                </div>
+                <div class="print-disclaimer-card">
+                    <div class="print-disclaimer-title">Not a Medical Diagnosis</div>
+                    <p>This result is strictly experimental and does <strong>not</strong> constitute a confirmed medical diagnosis, clinical finding, or treatment recommendation. A negative result does not guarantee the absence of cardiovascular disease.</p>
+                </div>
+                <div class="print-disclaimer-card">
+                    <div class="print-disclaimer-title">No Risk Calibration</div>
+                    <p>The model output must not be interpreted as a clinically calibrated risk probability or a prediction of future disease onset or cardiac events.</p>
+                </div>
+                <div class="print-disclaimer-card">
+                    <div class="print-disclaimer-title">Educational Prototype</div>
+                    <p>Developed strictly for educational and research demonstration purposes. It does not replace professional clinical evaluation by qualified medical personnel. Seek emergency medical care for acute cardiac symptoms.</p>
+                </div>
+            </div>
+            <div class="print-doc-footer">
+                <span>CardioPredict ML &bull; Educational Health Assessment System</span>
+                <span id="printDocPageNotice">Formal Summary Document &bull; Confidential Personal Health Data</span>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

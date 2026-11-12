@@ -1,0 +1,50 @@
+{
+    "model_name": "Major Heart Disease Classification Model",
+    "model_type": "Random Forest",
+    "target": "HeartDisease",
+    "decision_threshold": 0.5,
+    "training_records": 917,
+    "positive_records": 507,
+    "negative_records": 410,
+    "input_features": [
+        "Age",
+        "Sex",
+        "ChestPainType",
+        "RestingBP",
+        "Cholesterol",
+        "FastingBS",
+        "RestingECG",
+        "MaxHR",
+        "ExerciseAngina",
+        "Oldpeak",
+        "ST_Slope"
+    ],
+    "excluded_input_columns": [
+        "Cholesterol_Missing"
+    ],
+    "preprocessing": [
+        "Median imputation for numerical missing values",
+        "StandardScaler for numerical features",
+        "OneHotEncoder for categorical features",
+        "FastingBS passed through as a binary feature"
+    ],
+    "model_parameters": {
+        "n_estimators": 700,
+        "max_depth": 20,
+        "max_features": "sqrt",
+        "min_samples_leaf": 2,
+        "min_samples_split": 9,
+        "class_weight": "balanced_subsample",
+        "random_state": 42
+    },
+    "evaluation_metrics": {
+        "accuracy": 0.875,
+        "precision": 0.8762,
+        "recall": 0.902,
+        "f1_score": 0.8889,
+        "roc_auc": 0.931
+    },
+    "evaluation_note": "Metrics belong to the earlier 80/20 evaluation pipeline, not the final model refitted on all records. The test set was used to compare two candidate pipelines.",
+    "limitation": "Predicts the recorded dataset label, not clinically validated future heart disease risk. Not a diagnostic tool.",
+    "sklearn_version": "1.6.1"
+}

@@ -1,0 +1,32 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Google API Credentials & Tokens
+credentials.json
+client_secret.json
+token.json
+*.token
+
+# Python Cache & Testing
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Node Modules & Builds
+node_modules/
+dist/
+
+# OS Files
+.DS_Store
+Thumbs.db
